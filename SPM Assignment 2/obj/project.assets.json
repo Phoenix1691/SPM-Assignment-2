@@ -14,11 +14,11 @@
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "C:\\Users\\MAAMA\\OneDrive - Ngee Ann Polytechnic\\Ngee Ann Things\\April 2025\\SPM\\SPM Assignment 2\\SPM Assignment 2 CODE\\SPM Assignment 2\\SPM Assignment 2\\SPM Assignment 2.csproj",
+      "projectUniqueName": "C:\\Users\\MAAMA\\OneDrive - Ngee Ann Polytechnic\\Ngee Ann Things\\April 2025\\SPM\\SPM Assignment 2\\SPM-Assignment-2\\SPM Assignment 2\\SPM Assignment 2.csproj",
       "projectName": "SPM Assignment 2",
-      "projectPath": "C:\\Users\\MAAMA\\OneDrive - Ngee Ann Polytechnic\\Ngee Ann Things\\April 2025\\SPM\\SPM Assignment 2\\SPM Assignment 2 CODE\\SPM Assignment 2\\SPM Assignment 2\\SPM Assignment 2.csproj",
+      "projectPath": "C:\\Users\\MAAMA\\OneDrive - Ngee Ann Polytechnic\\Ngee Ann Things\\April 2025\\SPM\\SPM Assignment 2\\SPM-Assignment-2\\SPM Assignment 2\\SPM Assignment 2.csproj",
       "packagesPath": "C:\\Users\\MAAMA\\.nuget\\packages\\",
-      "outputPath": "C:\\Users\\MAAMA\\OneDrive - Ngee Ann Polytechnic\\Ngee Ann Things\\April 2025\\SPM\\SPM Assignment 2\\SPM Assignment 2 CODE\\SPM Assignment 2\\SPM Assignment 2\\obj\\",
+      "outputPath": "C:\\Users\\MAAMA\\OneDrive - Ngee Ann Polytechnic\\Ngee Ann Things\\April 2025\\SPM\\SPM Assignment 2\\SPM-Assignment-2\\SPM Assignment 2\\obj\\",
       "projectStyle": "PackageReference",
       "fallbackFolders": [
         "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
