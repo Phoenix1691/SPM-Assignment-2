@@ -1,7 +1,0 @@
-# Visual Studio files
-.vs/
-bin/
-obj/
-*.user
-*.suo
-*.cache
