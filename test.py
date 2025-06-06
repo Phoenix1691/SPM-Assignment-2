@@ -3,15 +3,11 @@ import sys
 
 pygame.init()
 
-GRID_SIZE = 8
-TILE_SIZE = 60
-SCREEN = pygame.display.set_mode((GRID_SIZE * TILE_SIZE, GRID_SIZE * TILE_SIZE))
-pygame.display.set_caption("Grid Test")
-
-WHITE = (240, 240, 240)
 GRAY = (180, 180, 180)
 GREEN = (0, 200, 0)
 BLACK = (0, 0, 0)
+HUD_BG = (200, 200, 200)
+
 
 grid = [[0 for _ in range(GRID_SIZE)] for _ in range(GRID_SIZE)]
 
@@ -27,6 +23,8 @@ while running:
             row = y // TILE_SIZE
             if grid[row][col] == 0:
                 grid[row][col] = 1
+            elif grid[row][col] == 1:
+                grid[row][col] = 0
 
     for row in range(GRID_SIZE):
         for col in range(GRID_SIZE):
