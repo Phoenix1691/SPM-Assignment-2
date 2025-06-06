@@ -14,7 +14,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("SPM Assignment 2")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+759c3101974c2038bbb159690c727b59c02ec0ef")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+6284734c297a625a844378a43bee1e7e0d69e586")]
 [assembly: System.Reflection.AssemblyProductAttribute("SPM Assignment 2")]
 [assembly: System.Reflection.AssemblyTitleAttribute("SPM Assignment 2")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]
