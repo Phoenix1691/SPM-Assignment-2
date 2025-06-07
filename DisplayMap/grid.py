@@ -33,7 +33,17 @@ class Grid:
             return
         row = (y - self.stats_display_size) // self.tile_size
         col = x // self.tile_size
+        # change to build or demolish functionality in arcade/free play mode later, and uncomment the return statement
+        # return row, col
         if self.grid[row][col] == 0:
             self.grid[row][col] = 1
         else:
             self.grid[row][col] = 0
+        
+    def build(type):
+        # Placeholder for building functionality
+        pass
+
+    def demolish(type):
+        # Placeholder for destroying functionality
+        pass
