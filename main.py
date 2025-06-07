@@ -6,9 +6,7 @@ import sys
 import mainMenu
 
 pygame.init()
+pygame.font.init()
 
 while (True):
-    for event in pygame.event.get():
-        if event.type == pygame.QUIT:
-            pygame.quit()
-            sys.exit()
+    mainMenu.main_menu()  # Call the main menu function from mainMenu.py
