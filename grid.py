@@ -14,7 +14,16 @@ GRAY = (180, 180, 180)
 GREEN = (0, 200, 0)
 BLACK = (0, 0, 0)
 HUD_BG = (200, 200, 200)
-
+def draw_grid(surface, grid):
+    """Draw the grid on the given surface."""
+    for row in range(GRID_SIZE):
+        for col in range(GRID_SIZE):
+            rect = pygame.Rect(col * TILE_SIZE, row * TILE_SIZE + STATS_DISPLAY_SIZE, TILE_SIZE, TILE_SIZE)
+            color = WHITE if (row + col) % 2 == 0 else GRAY
+            if grid[row][col] == 1:
+                color = GREEN
+            pygame.draw.rect(surface, color, rect)
+            pygame.draw.rect(surface, BLACK, rect, 1)
 # Window setup
 SCREEN_WIDTH = GRID_SIZE * TILE_SIZE
 SCREEN_HEIGHT = GRID_SIZE * TILE_SIZE + STATS_DISPLAY_SIZE
