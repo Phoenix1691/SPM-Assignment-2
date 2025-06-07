@@ -1,7 +1,9 @@
+# File: main.py
+# main.py - Main entry point for the game
+
 import pygame
 import sys
-from ArcadeMode import ArcadePlay
-from FreePlayMode import FreePlay
+import mainMenu
 
 pygame.init()
 

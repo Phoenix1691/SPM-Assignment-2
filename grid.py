@@ -1,3 +1,5 @@
+# grid.py - Displays map
+
 import pygame
 import sys
 
