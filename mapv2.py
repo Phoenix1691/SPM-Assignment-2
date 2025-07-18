@@ -86,6 +86,21 @@ class Map:
 
                 pygame.draw.rect(self.screen, color, rect)
                 pygame.draw.rect(self.screen, BLACK, rect, 1)
+                
+    def draw_building_options(self, building_options, selected_index):
+        font = pygame.font.SysFont("Arial", 24)
+        for i, building in enumerate(building_options):
+            color = BUILDING_COLORS.get(building, GRAY)
+            x = 50 + i * 120
+            y = 10
+            pygame.draw.rect(self.screen, color, (x, y, 60, 30))
+            pygame.draw.rect(self.screen, BLACK, (x, y, 60, 30), 2)
+
+            if i == selected_index:
+                pygame.draw.rect(self.screen, BLACK, (x - 4, y - 4, 68, 38), 3)
+
+            label = font.render(building, True, BLACK)
+            self.screen.blit(label, (x + 20, y + 5))
 
     def place_building(self, pos, building_type):
         """Places a building on a clicked cell"""
