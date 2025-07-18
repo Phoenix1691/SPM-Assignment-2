@@ -69,7 +69,7 @@ class ArcadeGame:
                     score += adjacent.count("R") + adjacent.count("C")
                     score += 2 * adjacent.count("O")
             elif building == "I":
-                pass  # add industry points below
+                score += 1  # Placeholder: every I gives 1 point
             elif building == "C":
                 adjacent = self.get_adjacent(row, col)
                 score += adjacent.count("C")
@@ -89,7 +89,7 @@ def draw_stats(screen, game):
     screen.blit(font.render(f"Turn: {game.turn}", True, (0, 0, 0)), (10, 10))
     screen.blit(font.render(f"Coins: {game.coins}", True, (0, 0, 0)), (150, 10))
     screen.blit(font.render(f"Score: {game.score}", True, (0, 0, 0)), (300, 10))
-    screen.blit(font.render(f"Build choices: 1) {game.building_choices[0]}  2) {game.building_choices[1]}", True, (0, 0, 0)), (450, 10))
+    screen.blit(font.render(f"1: {game.building_choices[0]}   2: {game.building_choices[1]}", True, (0, 0, 0)), (500, 10))
 
 def main():
     pygame.init()
