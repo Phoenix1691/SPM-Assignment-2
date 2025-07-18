@@ -135,6 +135,7 @@ class Map:
 
         print(f"Grid expanded to: {self.grid_size} x {self.grid_size} (Tile: {self.tile_size}px)")
 
+"""
 # Constants
 SCREEN_WIDTH = 800
 STATS_HEIGHT = 50
@@ -164,6 +165,7 @@ while running:
             city_map.attempt_place_building(pos, selected_building)
 
 pygame.quit()
+"""
 
 """
 dont delete need this for reference
