@@ -1,6 +1,6 @@
 import pygame
 import random
-from mapv2 import Map
+from mapv2 import Map  # Ensure mapv2.py with Map class is in the same folder
 
 SCREEN_WIDTH = 800
 STATS_HEIGHT = 80
@@ -12,7 +12,7 @@ class ArcadeGame:
     def __init__(self):
         self.map = Map(GRID_SIZE, SCREEN_WIDTH, STATS_HEIGHT)
         self.map.initialize_screen()
-        self.turn = 0
+        self.turn = 1
         self.coins = 16
         self.score = 0
         self.building_choices = self.random_building_choices()
@@ -69,7 +69,7 @@ class ArcadeGame:
                     score += adjacent.count("R") + adjacent.count("C")
                     score += 2 * adjacent.count("O")
             elif building == "I":
-                score += 1  # Placeholder: every I gives 1 point
+                score += 1  # Each industry gives 1 point
             elif building == "C":
                 adjacent = self.get_adjacent(row, col)
                 score += adjacent.count("C")
@@ -106,13 +106,15 @@ def main():
         draw_stats(game.map.screen, game)
 
         if message:
+            # Display message below stats bar
             msg_surface = font.render(message, True, (255, 0, 0))
-            game.map.screen.blit(msg_surface, (10, SCREEN_WIDTH + 10))
+            game.map.screen.blit(msg_surface, (10, STATS_HEIGHT + 5))
 
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 pygame.quit()
                 return
+
             elif event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_1:
                     placing_building = game.building_choices[0]
@@ -146,3 +148,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+
