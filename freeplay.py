@@ -6,7 +6,7 @@ from mapv2 import Map  # Make sure mapv2.py is in the same folder
 class FreePlayGame:
     def __init__(self):
         self.grid = self.create_grid(5)
-        self.turn = 1
+        self.turn = 0
         self.loss_turns = 0
         self.max_loss_turns = 20
         self.coins = 1000  # Starting coins for display only, treated as unlimited
