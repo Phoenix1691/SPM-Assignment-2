@@ -224,11 +224,11 @@ def main():
                             city_map.tile_size = city_map.screen.get_width() // city_map.grid_size
                             new_height = city_map.grid_size * city_map.tile_size + STATS_HEIGHT
                             city_map.screen = pygame.display.set_mode((city_map.screen.get_width(), new_height))
+                        game.next_turn()
 
                     else:
                         print(f"Cannot place building at ({col}, {row})")
 
-        game.next_turn()
         clock.tick(30)
 
     pygame.quit()
