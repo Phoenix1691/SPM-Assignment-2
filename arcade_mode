@@ -1,220 +1,148 @@
-import random
-import pickle
-import os
-from mapv2 import Map 
 import pygame
+import random
+from mapv2 import Map
 
+SCREEN_WIDTH = 800
+STATS_HEIGHT = 80
 GRID_SIZE = 20
-BUILDINGS = ["R", "C", "I", "O", "*"]
 
-class ArcadeMode:
+BUILDINGS = ['R', 'I', 'C', 'O', '*']
+
+class ArcadeGame:
     def __init__(self):
-        self.grid = [["." for _ in range(GRID_SIZE)] for _ in range(GRID_SIZE)]
+        self.map = Map(GRID_SIZE, SCREEN_WIDTH, STATS_HEIGHT)
+        self.map.initialize_screen()
         self.turn = 1
         self.coins = 16
         self.score = 0
-        self.available = self.generate_buildings()
-        self.running = True
+        self.building_choices = self.random_building_choices()
+        self.selected_building = None
+        self.game_over = False
 
-    def generate_buildings(self):
+    def random_building_choices(self):
         return random.sample(BUILDINGS, 2)
 
-    def display(self):
-        print("\n--- Arcade Mode ---")
-        print(f"Turn: {self.turn} | Coins: {self.coins} | Score: {self.score}")
-        print(f"Available buildings: 1) {self.available[0]}  2) {self.available[1]}")
-        print("   " + " ".join([f"{i:02}" for i in range(GRID_SIZE)]))
-        for i, row in enumerate(self.grid):
-            print(f"{i:02} " + " ".join(row))
-
-    def is_adjacent(self, x, y):
-        for dx, dy in [(-1,0),(1,0),(0,-1),(0,1)]:
-            nx, ny = x + dx, y + dy
-            if 0 <= nx < GRID_SIZE and 0 <= ny < GRID_SIZE and self.grid[nx][ny] != ".":
-                return True
-        return False
-
-    def build_building(self):
-        choice = input("Choose building to place (1 or 2): ").strip()
-        if choice not in ["1", "2"]:
-            print("Invalid choice.")
-            return
-        selected = self.available[int(choice)-1]
-
-        try:
-            coords = input("Enter location (row,col): ").strip()
-            x, y = map(int, coords.split(","))
-            if not (0 <= x < GRID_SIZE and 0 <= y < GRID_SIZE):
-                print("Invalid coordinates.")
-                return
-            if self.grid[x][y] != ".":
-                print("Cell already occupied.")
-                return
-            if self.turn > 1 and not self.is_adjacent(x, y):
-                print("Must build adjacent to existing building.")
-                return
-        except:
-            print("Invalid input.")
-            return
-
+    def place_building(self, pos, building):
         if self.coins < 1:
-            print("Not enough coins to build.")
-            return
-
-        self.grid[x][y] = selected
-        self.coins -= 1
-        self.turn += 1
-        self.available = self.generate_buildings()
-        self.update_score()
-
-    def demolish_building(self):
-        if self.coins < 1:
-            print("Not enough coins to demolish.")
-            return
-        try:
-            coords = input("Enter location to demolish (row,col): ").strip()
-            x, y = map(int, coords.split(","))
-            if not (0 <= x < GRID_SIZE and 0 <= y < GRID_SIZE):
-                print("Invalid coordinates.")
-                return
-            if self.grid[x][y] == ".":
-                print("No building at that location.")
-                return
-            self.grid[x][y] = "."
+            return False, "No coins left."
+        success = self.map.attempt_place_building(pos, building)
+        if success:
             self.coins -= 1
-            self.update_score()
-        except:
-            print("Invalid input.")
-            return
+            self.turn += 1
+            self.score = self.calculate_score()
+            self.building_choices = self.random_building_choices()
+            self.map.first_turn = False
+            return True, "Building placed."
+        else:
+            return False, "Cannot place building here."
 
-    def save_game(self):
-        name = input("Enter filename to save: ").strip()
-        with open(name + ".arcade", "wb") as f:
-            pickle.dump(self, f)
-        print(f"Game saved as {name}.arcade")
+    def demolish_building(self, pos):
+        x, y = pos
+        row = (y - STATS_HEIGHT) // self.map.tile_size
+        col = x // self.map.tile_size
+        if (row, col) in self.map.grid:
+            if self.coins < 1:
+                return False, "Not enough coins to demolish."
+            del self.map.grid[(row, col)]
+            self.coins -= 1
+            self.score = self.calculate_score()
+            return True, "Building demolished."
+        return False, "No building to demolish here."
 
-    def update_score(self):
-        # Simple scoring system — you can extend this
+    def get_adjacent(self, row, col):
+        adj = []
+        for dx, dy in [(-1,0),(1,0),(0,-1),(0,1)]:
+            r, c = row + dy, col + dx
+            if 0 <= r < self.map.grid_size and 0 <= c < self.map.grid_size:
+                adj.append(self.map.grid.get((r, c), "."))
+        return adj
+
+    def calculate_score(self):
         score = 0
-        industry_count = 0
-        for x in range(GRID_SIZE):
-            for y in range(GRID_SIZE):
-                b = self.grid[x][y]
-                if b == "R":
-                    adjacent = [self.grid[nx][ny] for nx, ny in self.get_adjacent_coords(x, y)]
-                    if "I" in adjacent:
-                        score += 1
-                    else:
-                        score += adjacent.count("R") + adjacent.count("C") + 2 * adjacent.count("O")
-                elif b == "I":
-                    industry_count += 1
-                elif b == "C":
-                    score += self.count_adjacent(x, y, "C")
-                elif b == "O":
-                    score += self.count_adjacent(x, y, "O")
-                elif b == "*":
-                    score += self.count_connected_roads(x, y)
-        score += industry_count
-        self.score = score
+        total_industries = sum(1 for b in self.map.grid.values() if b == "I")
+        for (row, col), building in self.map.grid.items():
+            if building == "R":
+                adjacent = self.get_adjacent(row, col)
+                if "I" in adjacent:
+                    score += 1
+                else:
+                    score += adjacent.count("R") + adjacent.count("C")
+                    score += 2 * adjacent.count("O")
+            elif building == "I":
+                pass  # add industry points below
+            elif building == "C":
+                adjacent = self.get_adjacent(row, col)
+                score += adjacent.count("C")
+            elif building == "O":
+                adjacent = self.get_adjacent(row, col)
+                score += adjacent.count("O")
+            elif building == "*":
+                row_cells = [self.map.grid.get((row, c), ".") for c in range(self.map.grid_size)]
+                connected_roads = sum(1 for b in row_cells if b == "*")
+                score += connected_roads
+        score += total_industries
+        return score
 
-    def get_adjacent_coords(self, x, y):
-        return [(nx, ny) for dx, dy in [(-1,0),(1,0),(0,-1),(0,1)] if 0 <= (nx := x+dx) < GRID_SIZE and 0 <= (ny := y+dy) < GRID_SIZE]
-
-    def count_adjacent(self, x, y, building_type):
-        return sum(1 for nx, ny in self.get_adjacent_coords(x, y) if self.grid[nx][ny] == building_type)
-
-    def count_connected_roads(self, x, y):
-        return sum(1 for col in range(GRID_SIZE) if self.grid[x][col] == "*")
-
-    def game_loop(self):
-        while self.running:
-            self.display()
-            if self.coins == 0:
-                print("No coins left! Final Score:", self.score)
-                break
-            choice = input("\n1. Build Building\n2. Demolish Building\n3. Save Game\n4. Exit to Main Menu\nChoose option: ").strip()
-            if choice == "1":
-                self.build_building()
-            elif choice == "2":
-                self.demolish_building()
-            elif choice == "3":
-                self.save_game()
-            elif choice == "4":
-                print("Returning to main menu.")
-                break
-            else:
-                print("Invalid option.")
-
-def load_saved_game(filename):
-    if os.path.exists(filename):
-        with open(filename, "rb") as f:
-            return pickle.load(f)
-    else:
-        print("File not found.")
-        return None
-
-if __name__ == "__main__":
-    game = ArcadeMode()
-    game.game_loop()
-
-
-SCREEN_WIDTH = 800
-STATS_HEIGHT = 50
-
-def draw_stats(screen, game, height):
-    font = pygame.font.SysFont("Arial", 20)
-    screen.fill((220, 220, 220), (0, 0, screen.get_width(), height))
-    turn_text = font.render(f"Turn: {game.turn}", True, (0, 0, 0))
-    coins_text = font.render(f"Coins: {game.coins}", True, (0, 0, 0))
-    score_text = font.render(f"Score: {game.score}", True, (0, 0, 0))
-    choice_text = font.render(f"Choice: {game.selected_buildings[0]} or {game.selected_buildings[1]}", True, (0, 0, 0))
-
-    screen.blit(turn_text, (10, 5))
-    screen.blit(coins_text, (150, 5))
-    screen.blit(score_text, (300, 5))
-    screen.blit(choice_text, (450, 5))
+def draw_stats(screen, game):
+    font = pygame.font.SysFont("Arial", 24)
+    screen.fill((230, 230, 230), (0, 0, SCREEN_WIDTH, STATS_HEIGHT))
+    screen.blit(font.render(f"Turn: {game.turn}", True, (0, 0, 0)), (10, 10))
+    screen.blit(font.render(f"Coins: {game.coins}", True, (0, 0, 0)), (150, 10))
+    screen.blit(font.render(f"Score: {game.score}", True, (0, 0, 0)), (300, 10))
+    screen.blit(font.render(f"Build choices: 1) {game.building_choices[0]}  2) {game.building_choices[1]}", True, (0, 0, 0)), (450, 10))
 
 def main():
     pygame.init()
-    pygame.font.init()
-
     game = ArcadeGame()
-    city_map = Map(grid_size=len(game.grid), screen_width=SCREEN_WIDTH, stats_display_height=STATS_HEIGHT)
-    city_map.initialize_screen()
-
     clock = pygame.time.Clock()
-    running = True
+    font = pygame.font.SysFont("Arial", 20)
 
-    while running:
-        city_map.draw()
-        draw_stats(city_map.screen, game, STATS_HEIGHT)
-        pygame.display.flip()
+    placing_building = None
+    demolishing = False
+    message = ""
+
+    while True:
+        game.map.draw()
+        draw_stats(game.map.screen, game)
+
+        if message:
+            msg_surface = font.render(message, True, (255, 0, 0))
+            game.map.screen.blit(msg_surface, (10, SCREEN_WIDTH + 10))
 
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
-                running = False
+                pygame.quit()
+                return
+            elif event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_1:
+                    placing_building = game.building_choices[0]
+                    demolishing = False
+                    message = f"Placing building: {placing_building}. Click on grid."
+                elif event.key == pygame.K_2:
+                    placing_building = game.building_choices[1]
+                    demolishing = False
+                    message = f"Placing building: {placing_building}. Click on grid."
+                elif event.key == pygame.K_d:
+                    demolishing = True
+                    placing_building = None
+                    message = "Demolish mode: Click on building to demolish."
+                elif event.key == pygame.K_ESCAPE:
+                    pygame.quit()
+                    return
 
             elif event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
-                pos = pygame.mouse.get_pos()
-                if pos[1] < STATS_HEIGHT:
-                    continue
+                pos = event.pos
+                if demolishing:
+                    success, msg = game.demolish_building(pos)
+                    message = msg
+                elif placing_building:
+                    success, msg = game.place_building(pos, placing_building)
+                    if success:
+                        placing_building = None
+                    message = msg
 
-                row = (pos[1] - STATS_HEIGHT) // city_map.tile_size
-                col = pos[0] // city_map.tile_size
-
-                if 0 <= row < len(game.grid) and 0 <= col < len(game.grid[0]):
-                    placed = game.place_building(game.current_selection, col, row)
-                    if placed:
-                        city_map.grid[(row, col)] = game.current_selection
-                        game.next_turn()
-
-        if game.is_game_over():
-            print(f"\nGame Over! Final Score: {game.score}")
-            running = False
-
+        pygame.display.flip()
         clock.tick(30)
-
-    pygame.quit()
 
 if __name__ == "__main__":
     main()
