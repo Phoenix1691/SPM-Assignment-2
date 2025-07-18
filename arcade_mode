@@ -1,6 +1,8 @@
 import random
 import pickle
 import os
+from mapv2 import Map 
+import pygame
 
 GRID_SIZE = 20
 BUILDINGS = ["R", "C", "I", "O", "*"]
