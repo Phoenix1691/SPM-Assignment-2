@@ -1,0 +1,156 @@
+import random
+import pickle
+import os
+
+GRID_SIZE = 20
+BUILDINGS = ["R", "C", "I", "O", "*"]
+
+class ArcadeMode:
+    def __init__(self):
+        self.grid = [["." for _ in range(GRID_SIZE)] for _ in range(GRID_SIZE)]
+        self.turn = 1
+        self.coins = 16
+        self.score = 0
+        self.available = self.generate_buildings()
+        self.running = True
+
+    def generate_buildings(self):
+        return random.sample(BUILDINGS, 2)
+
+    def display(self):
+        print("\n--- Arcade Mode ---")
+        print(f"Turn: {self.turn} | Coins: {self.coins} | Score: {self.score}")
+        print(f"Available buildings: 1) {self.available[0]}  2) {self.available[1]}")
+        print("   " + " ".join([f"{i:02}" for i in range(GRID_SIZE)]))
+        for i, row in enumerate(self.grid):
+            print(f"{i:02} " + " ".join(row))
+
+    def is_adjacent(self, x, y):
+        for dx, dy in [(-1,0),(1,0),(0,-1),(0,1)]:
+            nx, ny = x + dx, y + dy
+            if 0 <= nx < GRID_SIZE and 0 <= ny < GRID_SIZE and self.grid[nx][ny] != ".":
+                return True
+        return False
+
+    def build_building(self):
+        choice = input("Choose building to place (1 or 2): ").strip()
+        if choice not in ["1", "2"]:
+            print("Invalid choice.")
+            return
+        selected = self.available[int(choice)-1]
+
+        try:
+            coords = input("Enter location (row,col): ").strip()
+            x, y = map(int, coords.split(","))
+            if not (0 <= x < GRID_SIZE and 0 <= y < GRID_SIZE):
+                print("Invalid coordinates.")
+                return
+            if self.grid[x][y] != ".":
+                print("Cell already occupied.")
+                return
+            if self.turn > 1 and not self.is_adjacent(x, y):
+                print("Must build adjacent to existing building.")
+                return
+        except:
+            print("Invalid input.")
+            return
+
+        if self.coins < 1:
+            print("Not enough coins to build.")
+            return
+
+        self.grid[x][y] = selected
+        self.coins -= 1
+        self.turn += 1
+        self.available = self.generate_buildings()
+        self.update_score()
+
+    def demolish_building(self):
+        if self.coins < 1:
+            print("Not enough coins to demolish.")
+            return
+        try:
+            coords = input("Enter location to demolish (row,col): ").strip()
+            x, y = map(int, coords.split(","))
+            if not (0 <= x < GRID_SIZE and 0 <= y < GRID_SIZE):
+                print("Invalid coordinates.")
+                return
+            if self.grid[x][y] == ".":
+                print("No building at that location.")
+                return
+            self.grid[x][y] = "."
+            self.coins -= 1
+            self.update_score()
+        except:
+            print("Invalid input.")
+            return
+
+    def save_game(self):
+        name = input("Enter filename to save: ").strip()
+        with open(name + ".arcade", "wb") as f:
+            pickle.dump(self, f)
+        print(f"Game saved as {name}.arcade")
+
+    def update_score(self):
+        # Simple scoring system — you can extend this
+        score = 0
+        industry_count = 0
+        for x in range(GRID_SIZE):
+            for y in range(GRID_SIZE):
+                b = self.grid[x][y]
+                if b == "R":
+                    adjacent = [self.grid[nx][ny] for nx, ny in self.get_adjacent_coords(x, y)]
+                    if "I" in adjacent:
+                        score += 1
+                    else:
+                        score += adjacent.count("R") + adjacent.count("C") + 2 * adjacent.count("O")
+                elif b == "I":
+                    industry_count += 1
+                elif b == "C":
+                    score += self.count_adjacent(x, y, "C")
+                elif b == "O":
+                    score += self.count_adjacent(x, y, "O")
+                elif b == "*":
+                    score += self.count_connected_roads(x, y)
+        score += industry_count
+        self.score = score
+
+    def get_adjacent_coords(self, x, y):
+        return [(nx, ny) for dx, dy in [(-1,0),(1,0),(0,-1),(0,1)] if 0 <= (nx := x+dx) < GRID_SIZE and 0 <= (ny := y+dy) < GRID_SIZE]
+
+    def count_adjacent(self, x, y, building_type):
+        return sum(1 for nx, ny in self.get_adjacent_coords(x, y) if self.grid[nx][ny] == building_type)
+
+    def count_connected_roads(self, x, y):
+        return sum(1 for col in range(GRID_SIZE) if self.grid[x][col] == "*")
+
+    def game_loop(self):
+        while self.running:
+            self.display()
+            if self.coins == 0:
+                print("No coins left! Final Score:", self.score)
+                break
+            choice = input("\n1. Build Building\n2. Demolish Building\n3. Save Game\n4. Exit to Main Menu\nChoose option: ").strip()
+            if choice == "1":
+                self.build_building()
+            elif choice == "2":
+                self.demolish_building()
+            elif choice == "3":
+                self.save_game()
+            elif choice == "4":
+                print("Returning to main menu.")
+                break
+            else:
+                print("Invalid option.")
+
+def load_saved_game(filename):
+    if os.path.exists(filename):
+        with open(filename, "rb") as f:
+            return pickle.load(f)
+    else:
+        print("File not found.")
+        return None
+
+if __name__ == "__main__":
+    game = ArcadeMode()
+    game.game_loop()
