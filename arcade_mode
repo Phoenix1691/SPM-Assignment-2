@@ -154,3 +154,65 @@ def load_saved_game(filename):
 if __name__ == "__main__":
     game = ArcadeMode()
     game.game_loop()
+
+
+SCREEN_WIDTH = 800
+STATS_HEIGHT = 50
+
+def draw_stats(screen, game, height):
+    font = pygame.font.SysFont("Arial", 20)
+    screen.fill((220, 220, 220), (0, 0, screen.get_width(), height))
+    turn_text = font.render(f"Turn: {game.turn}", True, (0, 0, 0))
+    coins_text = font.render(f"Coins: {game.coins}", True, (0, 0, 0))
+    score_text = font.render(f"Score: {game.score}", True, (0, 0, 0))
+    choice_text = font.render(f"Choice: {game.selected_buildings[0]} or {game.selected_buildings[1]}", True, (0, 0, 0))
+
+    screen.blit(turn_text, (10, 5))
+    screen.blit(coins_text, (150, 5))
+    screen.blit(score_text, (300, 5))
+    screen.blit(choice_text, (450, 5))
+
+def main():
+    pygame.init()
+    pygame.font.init()
+
+    game = ArcadeGame()
+    city_map = Map(grid_size=len(game.grid), screen_width=SCREEN_WIDTH, stats_display_height=STATS_HEIGHT)
+    city_map.initialize_screen()
+
+    clock = pygame.time.Clock()
+    running = True
+
+    while running:
+        city_map.draw()
+        draw_stats(city_map.screen, game, STATS_HEIGHT)
+        pygame.display.flip()
+
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                running = False
+
+            elif event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
+                pos = pygame.mouse.get_pos()
+                if pos[1] < STATS_HEIGHT:
+                    continue
+
+                row = (pos[1] - STATS_HEIGHT) // city_map.tile_size
+                col = pos[0] // city_map.tile_size
+
+                if 0 <= row < len(game.grid) and 0 <= col < len(game.grid[0]):
+                    placed = game.place_building(game.current_selection, col, row)
+                    if placed:
+                        city_map.grid[(row, col)] = game.current_selection
+                        game.next_turn()
+
+        if game.is_game_over():
+            print(f"\nGame Over! Final Score: {game.score}")
+            running = False
+
+        clock.tick(30)
+
+    pygame.quit()
+
+if __name__ == "__main__":
+    main()
