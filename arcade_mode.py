@@ -12,7 +12,7 @@ class ArcadeGame:
     def __init__(self):
         self.map = Map(GRID_SIZE, SCREEN_WIDTH, STATS_HEIGHT)
         self.map.initialize_screen()
-        self.turn = 1
+        self.turn = 0
         self.coins = 16
         self.score = 0
         self.building_choices = self.random_building_choices()
