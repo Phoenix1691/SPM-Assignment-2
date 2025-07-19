@@ -5,8 +5,6 @@ Press 3: Commercial (C)
 Press 4: Park (O)
 Press 5: Road (*)
 Press D: Demolish
-Press S: Save game
-Press L: Load game
 """
 
 import pygame
