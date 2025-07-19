@@ -189,20 +189,6 @@ class FreePlayGame:
         with open(filename, 'wb') as f:
             pickle.dump(data, f)
 
-    def load_game(self, filename="freeplay_save.pkl"):
-        if os.path.exists(filename):
-            with open(filename, 'rb') as f:
-                data = pickle.load(f)
-                self.map.grid = data['grid']
-                self.turn = data['turn']
-                self.loss_turns = data['loss_turns']
-                self.score = data['score']
-                self.map.first_turn = False
-                # Optionally update map grid size if needed
-                self.map.expand_grid()
-            return True
-        return False
-
 def draw_stats(screen, game):
     font = pygame.font.SysFont("Arial", 20)
     pygame.draw.rect(screen, WHITE, (0, 0, SCREEN_WIDTH, STATS_HEIGHT))
@@ -243,11 +229,6 @@ def main():
                 elif event.key == pygame.K_s:
                     game.save_game()
                     message = "Game saved."
-                elif event.key == pygame.K_l:
-                    if game.load_game():
-                        message = "Game loaded successfully."
-                    else:
-                        message = "No saved game found."
                 elif event.key == pygame.K_ESCAPE:
                     pygame.quit()
                     return
