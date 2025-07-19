@@ -1,3 +1,9 @@
+"""
+Press 1 or 2 for the randomized building
+Press D - Demolish
+Press S - Save game
+"""
+
 import pygame
 import random
 from mapv2 import Map  # Ensure mapv2.py with Map class is in the same folder
@@ -114,6 +120,19 @@ class ArcadeGame:
                 score += connected_roads
         score += total_industries
         return score
+        
+        def save_game(self, filename="arcade_save.pkl"):
+        data = {
+            'grid': self.map.grid,
+            'turn': self.turn,
+            'coins': self.coins,
+            'score': self.score,
+            'building_choices': self.building_choices,
+            'selected_building': self.selected_building,
+            'game_over': self.game_over
+        }
+        with open(filename, 'wb') as f:
+            pickle.dump(data, f)
 
 def draw_stats(screen, game):
     font = pygame.font.SysFont("Arial", 24)
@@ -159,6 +178,9 @@ def main():
                     demolishing = True
                     placing_building = None
                     message = "Demolish mode: Click on building to demolish."
+                elif event.key == pygame.K_s:
+                    game.save_game()
+                    message = "Game saved."
                 elif event.key == pygame.K_ESCAPE:
                     pygame.quit()
                     return
