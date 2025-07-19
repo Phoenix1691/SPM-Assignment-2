@@ -31,7 +31,6 @@ class FreePlayGame:
 
     def get_bounds(self):
         if not self.map.grid:
-            # Empty grid, return initial 0-based bounds for safety
             return 0, self.map.grid_size - 1, 0, self.map.grid_size - 1
         rows = [pos[0] for pos in self.map.grid.keys()]
         cols = [pos[1] for pos in self.map.grid.keys()]
@@ -41,7 +40,6 @@ class FreePlayGame:
         adj = []
         for dx, dy in [(-1,0),(1,0),(0,-1),(0,1)]:
             r, c = row + dy, col + dx
-            # Use .get() to avoid KeyErrors
             adj.append(self.map.grid.get((r, c), "."))
         return adj
 
@@ -51,10 +49,9 @@ class FreePlayGame:
 
         min_row, max_row, min_col, max_col = self.get_bounds()
 
-        # Detect horizontal connected road segments dynamically
         for row in range(min_row, max_row + 1):
             start = None
-            for col in range(min_col, max_col + 2):  # +1 for sentinel, +1 because range end is exclusive
+            for col in range(min_col, max_col + 2):
                 cell = self.map.grid.get((row, col), ".") if col <= max_col else "."
                 if cell == "*":
                     if start is None:
@@ -66,7 +63,6 @@ class FreePlayGame:
                                 road_connected.add((row, rx))
                         start = None
 
-        # Calculate profit and upkeep for all placed buildings
         for (row, col), cell in self.map.grid.items():
             if cell == "R":
                 profit += 1
@@ -81,6 +77,25 @@ class FreePlayGame:
             elif cell == "*":
                 if (row, col) not in road_connected:
                     upkeep += 1
+
+        # Cluster upkeep logic
+        visited = set()
+        def dfs(r, c):
+            stack = [(r, c)]
+            while stack:
+                rr, cc = stack.pop()
+                if (rr, cc) in visited:
+                    continue
+                visited.add((rr, cc))
+                for dx, dy in [(-1,0),(1,0),(0,-1),(0,1)]:
+                    nr, nc = rr + dy, cc + dx
+                    if self.map.grid.get((nr, nc)) == "R" and (nr, nc) not in visited:
+                        stack.append((nr, nc))
+
+        for (row, col), cell in self.map.grid.items():
+            if cell == "R" and (row, col) not in visited:
+                dfs(row, col)
+                upkeep += 1
 
         return profit, upkeep
 
