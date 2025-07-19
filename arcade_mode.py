@@ -1,6 +1,6 @@
 import pygame
 import random
-from mapv2 import Map  # Make sure mapv2.py is in the same folder
+from mapv2 import Map  # Ensure mapv2.py with Map class is in the same folder
 
 SCREEN_WIDTH = 800
 STATS_HEIGHT = 80
@@ -22,6 +22,43 @@ class ArcadeGame:
     def random_building_choices(self):
         return random.sample(BUILDINGS, 2)
 
+    def place_building(self, pos, building):
+        if self.coins < 1:
+            return False, "No coins left."
+        success = self.map.attempt_place_building(pos, building)
+        if success:
+            self.coins -= 1
+            self.turn += 1
+
+            # Calculate coins earned based on new building adjacency
+            coins_gained = self.calculate_coins_from_new_building(pos, building)
+            self.coins += coins_gained
+
+            self.score = self.calculate_score()
+            self.building_choices = self.random_building_choices()
+            self.map.first_turn = False
+
+            # Check for game over: no coins or board full
+            if self.coins <= 0 or len(self.map.grid) >= self.map.grid_size ** 2:
+                self.game_over = True
+
+            return True, f"Building placed. Coins gained: {coins_gained}"
+        else:
+            return False, "Cannot place building here."
+
+    def demolish_building(self, pos):
+        x, y = pos
+        row = (y - STATS_HEIGHT) // self.map.tile_size
+        col = x // self.map.tile_size
+        if (row, col) in self.map.grid:
+            if self.coins < 1:
+                return False, "Not enough coins to demolish."
+            del self.map.grid[(row, col)]
+            self.coins -= 1
+            self.score = self.calculate_score()
+            return True, "Building demolished."
+        return False, "No building to demolish here."
+
     def get_adjacent(self, row, col):
         adj = []
         for dx, dy in [(-1,0),(1,0),(0,-1),(0,1)]:
@@ -29,6 +66,28 @@ class ArcadeGame:
             if 0 <= r < self.map.grid_size and 0 <= c < self.map.grid_size:
                 adj.append(self.map.grid.get((r, c), "."))
         return adj
+
+    def calculate_coins_from_new_building(self, pos, building):
+        x, y = pos
+        row = (y - STATS_HEIGHT) // self.map.tile_size
+        col = x // self.map.tile_size
+        coins = 0
+        adjacent_buildings = self.get_adjacent(row, col)
+
+        if building == 'R':
+            # Residential gets coins for each adjacent Industry or Commercial
+            coins = adjacent_buildings.count('I') + adjacent_buildings.count('C')
+
+        elif building == 'I':
+            # Industry generates coins equal to adjacent Residentials
+            coins = adjacent_buildings.count('R')
+
+        elif building == 'C':
+            # Commercial generates coins equal to adjacent Residentials
+            coins = adjacent_buildings.count('R')
+
+        # Parks and Roads generate no coins
+        return coins
 
     def calculate_score(self):
         score = 0
@@ -56,52 +115,6 @@ class ArcadeGame:
         score += total_industries
         return score
 
-    def calculate_coins_from_buildings(self):
-        coins_earned = 0
-        for (row, col), building in self.map.grid.items():
-            if building in ['I', 'C']:
-                adjacent = self.get_adjacent(row, col)
-                residential_count = adjacent.count('R')
-                coins_earned += residential_count
-        return coins_earned
-
-    def place_building(self, pos, building):
-        if self.coins < 1:
-            return False, "No coins left."
-        success = self.map.attempt_place_building(pos, building)
-        if success:
-            self.coins -= 1
-            self.turn += 1
-
-            self.score = self.calculate_score()
-
-            coins_gained = self.calculate_coins_from_buildings()
-            self.coins += coins_gained
-
-            self.building_choices = self.random_building_choices()
-            self.map.first_turn = False
-
-            # Check for game over conditions here if you want
-            if self.coins <= 0 or len(self.map.grid) >= self.map.grid_size ** 2:
-                self.game_over = True
-
-            return True, f"Building placed. Coins gained: {coins_gained}"
-        else:
-            return False, "Cannot place building here."
-
-    def demolish_building(self, pos):
-        x, y = pos
-        row = (y - STATS_HEIGHT) // self.map.tile_size
-        col = x // self.map.tile_size
-        if (row, col) in self.map.grid:
-            if self.coins < 1:
-                return False, "Not enough coins to demolish."
-            del self.map.grid[(row, col)]
-            self.coins -= 1
-            self.score = self.calculate_score()
-            return True, "Building demolished."
-        return False, "No building to demolish here."
-
 def draw_stats(screen, game):
     font = pygame.font.SysFont("Arial", 24)
     screen.fill((230, 230, 230), (0, 0, SCREEN_WIDTH, STATS_HEIGHT))
@@ -128,23 +141,12 @@ def main():
             msg_surface = font.render(message, True, (255, 0, 0))
             game.map.screen.blit(msg_surface, (10, STATS_HEIGHT + 5))
 
-        if game.game_over:
-            # Display game over message
-            over_msg = font.render("Game Over! Press ESC to quit.", True, (255, 0, 0))
-            game.map.screen.blit(over_msg, (SCREEN_WIDTH//3, SCREEN_WIDTH//2))
-        
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 pygame.quit()
                 return
 
             elif event.type == pygame.KEYDOWN:
-                if game.game_over:
-                    if event.key == pygame.K_ESCAPE:
-                        pygame.quit()
-                        return
-                    continue  # Ignore other keys after game over
-
                 if event.key == pygame.K_1:
                     placing_building = game.building_choices[0]
                     demolishing = False
@@ -162,9 +164,6 @@ def main():
                     return
 
             elif event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
-                if game.game_over:
-                    continue  # No input after game over
-
                 pos = event.pos
                 if demolishing:
                     success, msg = game.demolish_building(pos)
@@ -175,9 +174,14 @@ def main():
                         placing_building = None
                     message = msg
 
+        # End game if conditions met
+        if game.game_over:
+            message = "Game Over! Final Score: " + str(game.score)
+
         pygame.display.flip()
         clock.tick(30)
 
 if __name__ == "__main__":
     main()
+
 
