@@ -120,19 +120,20 @@ class ArcadeGame:
                 score += connected_roads
         score += total_industries
         return score
-        
         def save_game(self, filename="arcade_save.pkl"):
-        data = {
-            'grid': self.map.grid,
-            'turn': self.turn,
-            'coins': self.coins,
-            'score': self.score,
-            'building_choices': self.building_choices,
-            'selected_building': self.selected_building,
-            'game_over': self.game_over
-        }
-        with open(filename, 'wb') as f:
-            pickle.dump(data, f)
+            data = {
+                'grid': self.map.grid,
+                'turn': self.turn,
+                'coins': self.coins,
+                'score': self.score,
+                'building_choices': self.building_choices,
+                'selected_building': self.selected_building,
+                'game_over': self.game_over
+            }
+            with open(filename, 'wb') as f:
+                pickle.dump(data, f)
+        
+
 
 def draw_stats(screen, game):
     font = pygame.font.SysFont("Arial", 24)
