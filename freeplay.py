@@ -178,6 +178,30 @@ class FreePlayGame:
 
     def is_game_over(self):
         return self.loss_turns >= self.max_loss_turns
+    
+    def save_game(self, filename="freeplay_save.pkl"):
+        data = {
+            'grid': self.map.grid,
+            'turn': self.turn,
+            'loss_turns': self.loss_turns,
+            'score': self.score
+        }
+        with open(filename, 'wb') as f:
+            pickle.dump(data, f)
+
+    def load_game(self, filename="freeplay_save.pkl"):
+        if os.path.exists(filename):
+            with open(filename, 'rb') as f:
+                data = pickle.load(f)
+                self.map.grid = data['grid']
+                self.turn = data['turn']
+                self.loss_turns = data['loss_turns']
+                self.score = data['score']
+                self.map.first_turn = False
+                # Optionally update map grid size if needed
+                self.map.expand_grid()
+            return True
+        return False
 
 def draw_stats(screen, game):
     font = pygame.font.SysFont("Arial", 20)
@@ -216,6 +240,14 @@ def main():
                 elif event.key == pygame.K_d:
                     game.demolish_mode = not game.demolish_mode
                     message = "Demolish mode ON" if game.demolish_mode else "Demolish mode OFF"
+                elif event.key == pygame.K_s:
+                    game.save_game()
+                    message = "Game saved."
+                elif event.key == pygame.K_l:
+                    if game.load_game():
+                        message = "Game loaded successfully."
+                    else:
+                        message = "No saved game found."
                 elif event.key == pygame.K_ESCAPE:
                     pygame.quit()
                     return
