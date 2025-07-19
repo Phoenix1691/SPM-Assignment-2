@@ -1,9 +1,14 @@
 import pygame
 import os
-from mapv2 import Map  # Your existing Map class with expand_grid() and is_on_border()
+import pickle
+from mapv2 import Map  # Your mapv2.py with Map class
 
 SCREEN_WIDTH = 800
 STATS_HEIGHT = 50
+
+WHITE = (255, 255, 255)
+GRAY = (200, 200, 200)
+BLACK = (0, 0, 0)
 
 KEY_TO_BUILDING = {
     pygame.K_1: "R",
@@ -13,12 +18,9 @@ KEY_TO_BUILDING = {
     pygame.K_5: "*"
 }
 
-WHITE = (255, 255, 255)
-BLACK = (0, 0, 0)
-
 class FreePlayGame:
     def __init__(self):
-        self.map = Map(5, SCREEN_WIDTH, STATS_HEIGHT)  # start smaller grid 5x5
+        self.map = Map(grid_size=5, screen_width=SCREEN_WIDTH, stats_display_height=STATS_HEIGHT)
         self.map.initialize_screen()
         self.turn = 0
         self.loss_turns = 0
@@ -27,36 +29,82 @@ class FreePlayGame:
         self.selected_building = "R"
         self.demolish_mode = False
 
+    def get_bounds(self):
+        if not self.map.grid:
+            # Empty grid, return initial 0-based bounds for safety
+            return 0, self.map.grid_size - 1, 0, self.map.grid_size - 1
+        rows = [pos[0] for pos in self.map.grid.keys()]
+        cols = [pos[1] for pos in self.map.grid.keys()]
+        return min(rows), max(rows), min(cols), max(cols)
+
     def get_adjacent(self, row, col):
         adj = []
         for dx, dy in [(-1,0),(1,0),(0,-1),(0,1)]:
             r, c = row + dy, col + dx
-            if 0 <= r < self.map.grid_size and 0 <= c < self.map.grid_size:
-                adj.append(self.map.grid.get((r, c), "."))
+            # Use .get() to avoid KeyErrors
+            adj.append(self.map.grid.get((r, c), "."))
         return adj
 
     def calculate_profit_and_upkeep(self):
-        # Your profit/upkeep calculation here (optional)
-        return 0, 0  # stub
+        profit, upkeep = 0, 0
+        road_connected = set()
+
+        min_row, max_row, min_col, max_col = self.get_bounds()
+
+        # Detect horizontal connected road segments dynamically
+        for row in range(min_row, max_row + 1):
+            start = None
+            for col in range(min_col, max_col + 2):  # +1 for sentinel, +1 because range end is exclusive
+                cell = self.map.grid.get((row, col), ".") if col <= max_col else "."
+                if cell == "*":
+                    if start is None:
+                        start = col
+                else:
+                    if start is not None:
+                        if col - start > 1:
+                            for rx in range(start, col):
+                                road_connected.add((row, rx))
+                        start = None
+
+        # Calculate profit and upkeep for all placed buildings
+        for (row, col), cell in self.map.grid.items():
+            if cell == "R":
+                profit += 1
+            elif cell == "I":
+                profit += 2
+                upkeep += 1
+            elif cell == "C":
+                profit += 3
+                upkeep += 2
+            elif cell == "O":
+                upkeep += 1
+            elif cell == "*":
+                if (row, col) not in road_connected:
+                    upkeep += 1
+
+        return profit, upkeep
 
     def calculate_score(self):
-        # Your score logic, simplified:
         score = 0
-        for (r, c), b in self.map.grid.items():
-            adj = self.get_adjacent(r, c)
-            if b == "R":
-                if "I" in adj:
+        min_row, max_row, min_col, max_col = self.get_bounds()
+
+        for row in range(min_row, max_row + 1):
+            for col in range(min_col, max_col + 1):
+                cell = self.map.grid.get((row, col), ".")
+                adj = self.get_adjacent(row, col)
+                if cell == "R":
+                    if "I" in adj:
+                        score += 1
+                    else:
+                        score += adj.count("R") + adj.count("C") + 2 * adj.count("O")
+                elif cell == "I":
+                    score += 0
+                elif cell == "C":
+                    score += adj.count("C")
+                elif cell == "O":
+                    score += adj.count("O")
+                elif cell == "*":
                     score += 1
-                else:
-                    score += adj.count("R") + adj.count("C") + 2 * adj.count("O")
-            elif b == "I":
-                score += 0
-            elif b == "C":
-                score += adj.count("C")
-            elif b == "O":
-                score += adj.count("O")
-            elif b == "*":
-                score += 1
         score += sum(1 for b in self.map.grid.values() if b == "I")
         return score
 
@@ -65,26 +113,24 @@ class FreePlayGame:
             return False, "Cannot place building in demolish mode."
 
         x, y = pos
+        # Calculate grid coords based on current tile size and stats height
         row = (y - STATS_HEIGHT) // self.map.tile_size
         col = x // self.map.tile_size
 
-        # Check bounds
-        if not (0 <= row < self.map.grid_size and 0 <= col < self.map.grid_size):
-            return False, "Out of bounds."
+        # Allow placement anywhere — no adjacency check
+        if (row, col) not in self.map.grid:
+            self.map.grid[(row, col)] = self.selected_building
 
-        # Allow placing anywhere (no adjacency check)
-        if (row, col) in self.map.grid:
+            # If placed building on border, expand grid
+            if self.map.is_on_border(row, col):
+                self.map.expand_grid()
+
+            self.turn += 1
+            self.score = self.calculate_score()
+            self.map.first_turn = False
+            return True, "Building placed."
+        else:
             return False, "Cell already occupied."
-
-        self.map.grid[(row, col)] = self.selected_building
-
-        # Expand grid if placed on border
-        if self.map.is_on_border(row, col):
-            self.map.expand_grid()
-
-        self.turn += 1
-        self.score = self.calculate_score()
-        return True, "Building placed."
 
     def demolish_building(self, pos):
         x, y = pos
@@ -168,7 +214,7 @@ def main():
         if game.is_game_over():
             font = pygame.font.SysFont("Arial", 40)
             label = font.render("Game Over: 20 turns of loss", True, (200, 0, 0))
-            game.map.screen.blit(label, (100, game.map.screen.get_height() // 2))
+            game.map.screen.blit(label, (100, SCREEN_WIDTH // 2))
             pygame.display.flip()
             pygame.time.wait(3000)
             break
