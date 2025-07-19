@@ -90,9 +90,7 @@ class FreePlayGame:
             elif cell == "O":
                 score += adj.count("O")
             elif cell == "*":
-                # Count roads on same row
-                row_cells = [self.map.grid.get((row, c), ".") for c in range(self.map.grid_size)]
-                score += sum(1 for b in row_cells if b == "*")
+                 score += 1
         score += sum(1 for b in self.map.grid.values() if b == "I")
         return score
 
