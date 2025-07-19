@@ -183,51 +183,72 @@ def draw_stats(screen, game, stats_height):
 
 def main():
     pygame.init()
-    pygame.font.init()
+    screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
+    pygame.display.set_caption("City Builder - Free Play Mode")
+    city_map = Map(screen, GRID_SIZE)
+    game = FreePlayGame(city_map)
 
-    game = FreePlayGame()
-    city_map = Map(grid_size=len(game.grid), screen_width=SCREEN_WIDTH, stats_display_height=STATS_HEIGHT)
-    city_map.initialize_screen()
-
-    clock = pygame.time.Clock()
     running = True
+    clock = pygame.time.Clock()
 
     while running:
-        city_map.draw()
-        draw_stats(city_map.screen, game, STATS_HEIGHT)
+        screen.fill(WHITE)
+        city_map.draw_grid()
+        city_map.draw_buildings(game.grid)
+        city_map.display_game_info(game.turn, game.coins, game.calculate_score())
+
+        # Show two random building options
+        selected_building, other_building = game.select_buildings()
+        font = pygame.font.SysFont("Arial", 20)
+        building_text = font.render(f"Choose a building: 1 - {selected_building}, 2 - {other_building}", True, BLACK)
+        screen.blit(building_text, (20, 20))
         pygame.display.flip()
 
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                running = False
+        placed = False
+        building_choice = None
 
-            elif event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
-                pos = pygame.mouse.get_pos()
-                if pos[1] < STATS_HEIGHT:
-                    continue
+        while not placed and running:
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    running = False
+                    break
+                elif event.type == pygame.KEYDOWN:
+                    if event.key == pygame.K_1:
+                        building_choice = selected_building
+                    elif event.key == pygame.K_2:
+                        building_choice = other_building
+                elif event.type == pygame.MOUSEBUTTONDOWN and building_choice:
+                    pos = pygame.mouse.get_pos()
+                    row = (pos[1] - STATS_HEIGHT) // CELL_SIZE
+                    col = pos[0] // CELL_SIZE
 
-                row = (pos[1] - STATS_HEIGHT) // city_map.tile_size
-                col = pos[0] // city_map.tile_size
+                    if row < 0 or row >= GRID_SIZE or col < 0 or col >= GRID_SIZE:
+                        continue  # Clicked outside the grid
 
-                if 0 <= row < len(game.grid) and 0 <= col < len(game.grid[0]):
-                    placed = game.place_building(selected_building, col, row)
-                    if placed:
-                        city_map.grid[(row, col)] = selected_building
+                    if game.can_place(row, col):
+                        game.place_building(building_choice, row, col)
+                        city_map.grid[(row, col)] = building_choice
 
+                        # Resize if needed
                         if len(game.grid) != city_map.grid_size:
-                            city_map.grid = {}
-                            for y, row_vals in enumerate(game.grid):
-                                for x, val in enumerate(row_vals):
-                                    if val != ".":
-                                        city_map.grid[(y, x)] = val
-                            city_map.grid_size = len(game.grid)
-                            city_map.tile_size = city_map.screen.get_width() // city_map.grid_size
-                            new_height = city_map.grid_size * city_map.tile_size + STATS_HEIGHT
-                            city_map.screen = pygame.display.set_mode((city_map.screen.get_width(), new_height))
+                            game.grid_size = len(game.grid)
+                            screen = pygame.display.set_mode((CELL_SIZE * GRID_SIZE, CELL_SIZE * GRID_SIZE + STATS_HEIGHT))
+                            city_map = Map(screen, GRID_SIZE)
+                            city_map.grid = game.grid
+
                         game.next_turn()
 
-                    else:
-                        print(f"Cannot place building at ({col}, {row})")
+                        # ✅ GAME OVER CHECK
+                        if game.is_game_over():
+                            font = pygame.font.SysFont("Arial", 30)
+                            game_over_text = font.render("Game Over: Loss for 20 turns", True, (255, 0, 0))
+                            screen.blit(game_over_text, (200, STATS_HEIGHT + 20))
+                            pygame.display.flip()
+                            pygame.time.wait(4000)
+                            running = False
+                            break
+
+                        placed = True
 
         clock.tick(30)
 
