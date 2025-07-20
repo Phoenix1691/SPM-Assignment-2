@@ -8,7 +8,6 @@ Press D: Demolish
 Press S: Save game
 """
 
-from more_itertools import adjacent
 import pygame
 import os
 import pickle
@@ -56,38 +55,8 @@ class FreePlayGame:
 
     def calculate_profit_and_upkeep(self):
         profit, upkeep = 0, 0
-        road_connected = set()
 
-        min_row, max_row, min_col, max_col = self.get_bounds()
-
-        for row in range(min_row, max_row + 1):
-            start = None
-            for col in range(min_col, max_col + 2):
-                cell = self.map.grid.get((row, col), ".") if col <= max_col else "."
-                if cell == "*":
-                    if start is None:
-                        start = col
-                else:
-                    if start is not None:
-                        if col - start > 1:
-                            for rx in range(start, col):
-                                road_connected.add((row, rx))
-                        start = None
-         # Vertical road check
-        for col in range(min_col, max_col + 1):
-            start = None
-            for row in range(min_row, max_row + 2):
-                cell = self.map.grid.get((row, col), ".") if row <= max_row else "."
-                if cell == "*":
-                    if start is None:
-                        start = row
-                    else:
-                        if start is not None:
-                            if row - start > 1:
-                                for ry in range(start, row):
-                                    road_connected.add((ry, col))
-                            start = None
-
+        # Check profit and upkeep for each building type
         for (row, col), cell in self.map.grid.items():
             if cell == "R":
                 profit += 1
@@ -100,10 +69,17 @@ class FreePlayGame:
             elif cell == "O":
                 upkeep += 1
             elif cell == "*":
-                if (row, col) not in road_connected:
+                # Road upkeep: cost if no adjacent road segment
+                connected = False
+                for dx, dy in [(-1,0),(1,0),(0,-1),(0,1)]:
+                    adj_cell = self.map.grid.get((row + dy, col + dx))
+                    if adj_cell == "*":
+                        connected = True
+                        break
+                if not connected:
                     upkeep += 1
 
-        # Cluster upkeep logic
+        # Residential cluster upkeep: 1 coin per cluster of connected R's
         visited = set()
         def dfs(r, c):
             stack = [(r, c)]
@@ -136,8 +112,7 @@ class FreePlayGame:
                     if "I" in adj:
                         score += 1
                     else:
-                        score += adjacent.count("R") + adjacent.count("C")
-                        score += 2 * adjacent.count("O")
+                        # Fixed here: replaced undefined 'adjacent' with 'adj'
                         score += adj.count("R") + adj.count("C") + 2 * adj.count("O")
                 elif cell == "I":
                     score += 0
@@ -206,6 +181,8 @@ class FreePlayGame:
         }
         with open(filename, 'wb') as f:
             pickle.dump(data, f)
+
+
 
 def draw_stats(screen, game):
     font = pygame.font.SysFont("Arial", 20)
@@ -279,3 +256,5 @@ def main():
 
 if __name__ == "__main__":
     main()
+
+
