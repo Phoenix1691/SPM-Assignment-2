@@ -1,236 +1,269 @@
-import pygame
-from mapv2 import Map  # Make sure mapv2.py is in the same folder
+"""
+Press 1: Residential (R)
+Press 2: Industry (I)
+Press 3: Commercial (C)
+Press 4: Park (O)
+Press 5: Road (*)
+Press D: Demolish
+Press S: Save game
+"""
 
-# Your FreePlayGame class code here (copy-paste your entire class)
-# --------------------------------------------------------------
+import pygame
+import os
+import pickle
+from mapv2 import Map  # Your mapv2.py with Map class
+
+SCREEN_WIDTH = 800
+STATS_HEIGHT = 50
+
+WHITE = (255, 255, 255)
+GRAY = (200, 200, 200)
+BLACK = (0, 0, 0)
+
+KEY_TO_BUILDING = {
+    pygame.K_1: "R",
+    pygame.K_2: "I",
+    pygame.K_3: "C",
+    pygame.K_4: "O",
+    pygame.K_5: "*"
+}
+
 class FreePlayGame:
     def __init__(self):
-        self.grid = self.create_grid(5)
+        self.map = Map(grid_size=5, screen_width=SCREEN_WIDTH, stats_display_height=STATS_HEIGHT)
+        self.map.initialize_screen()
         self.turn = 0
         self.loss_turns = 0
         self.max_loss_turns = 20
-        self.coins = 1000  # Starting coins for display only, treated as unlimited
-        self.score = 0     # Total score for the city
+        self.score = 0
+        self.selected_building = "R"
+        self.demolish_mode = False
 
-    def create_grid(self, size):
-        return [["." for _ in range(size)] for _ in range(size)]
+    def get_bounds(self):
+        if not self.map.grid:
+            return 0, self.map.grid_size - 1, 0, self.map.grid_size - 1
+        rows = [pos[0] for pos in self.map.grid.keys()]
+        cols = [pos[1] for pos in self.map.grid.keys()]
+        return min(rows), max(rows), min(cols), max(cols)
 
-    def expand_grid_if_on_border(self, x, y, expansion_size=5):
-        grid_size = len(self.grid)
-        if x == 0 or y == 0 or x == grid_size - 1 or y == grid_size - 1:
-            new_size = grid_size + 2 * expansion_size
-            new_grid = self.create_grid(new_size)
-            offset = expansion_size
-
-            for old_y in range(grid_size):
-                for old_x in range(grid_size):
-                    new_grid[old_y + offset][old_x + offset] = self.grid[old_y][old_x]
-
-            self.grid = new_grid
-            return x + offset, y + offset
-        return x, y
-
-    def place_building(self, building, x, y):
-        x, y = self.expand_grid_if_on_border(x, y)
-        if self.grid[y][x] == ".":
-            self.grid[y][x] = building
-            self.coins -= 1  
-            return True
-        else:
-            print("Cell is already occupied.")
-            return False
-
-    def demolish_building(self, x, y):
-        if self.grid[y][x] != ".":
-            self.grid[y][x] = "."
-            self.coins -= 1
-            return True
-        else:
-            print("Cell is already empty.")
-            return False
+    def get_adjacent(self, row, col):
+        adj = []
+        for dx, dy in [(-1,0),(1,0),(0,-1),(0,1)]:
+            r, c = row + dy, col + dx
+            adj.append(self.map.grid.get((r, c), "."))
+        return adj
 
     def calculate_profit_and_upkeep(self):
         profit, upkeep = 0, 0
-        road_segments = []
-        clusters = []
+        road_connected = set()
+
+        min_row, max_row, min_col, max_col = self.get_bounds()
+
+        for row in range(min_row, max_row + 1):
+            start = None
+            for col in range(min_col, max_col + 2):
+                cell = self.map.grid.get((row, col), ".") if col <= max_col else "."
+                if cell == "*":
+                    if start is None:
+                        start = col
+                else:
+                    if start is not None:
+                        if col - start > 1:
+                            for rx in range(start, col):
+                                road_connected.add((row, rx))
+                        start = None
+
+        for (row, col), cell in self.map.grid.items():
+            if cell == "R":
+                profit += 1
+            elif cell == "I":
+                profit += 2
+                upkeep += 1
+            elif cell == "C":
+                profit += 3
+                upkeep += 2
+            elif cell == "O":
+                upkeep += 1
+            elif cell == "*":
+                if (row, col) not in road_connected:
+                    upkeep += 1
+
+        # Cluster upkeep logic
         visited = set()
-
-        def dfs(x, y, cluster):
-            stack = [(x, y)]
+        def dfs(r, c):
+            stack = [(r, c)]
             while stack:
-                cx, cy = stack.pop()
-                if (cx, cy) in visited:
+                rr, cc = stack.pop()
+                if (rr, cc) in visited:
                     continue
-                visited.add((cx, cy))
-                cluster.append((cx, cy))
+                visited.add((rr, cc))
                 for dx, dy in [(-1,0),(1,0),(0,-1),(0,1)]:
-                    nx, ny = cx+dx, cy+dy
-                    if 0 <= nx < len(self.grid[0]) and 0 <= ny < len(self.grid):
-                        if self.grid[ny][nx] == "R" and (nx, ny) not in visited:
-                            stack.append((nx, ny))
+                    nr, nc = rr + dy, cc + dx
+                    if self.map.grid.get((nr, nc)) == "R" and (nr, nc) not in visited:
+                        stack.append((nr, nc))
 
-        for y in range(len(self.grid)):
-            for x in range(len(self.grid[0])):
-                cell = self.grid[y][x]
-                if cell == "R" and (x, y) not in visited:
-                    cluster = []
-                    dfs(x, y, cluster)
-                    clusters.append(cluster)
-                elif cell == "I":
-                    profit += 2
-                    upkeep += 1
-                elif cell == "C":
-                    profit += 3
-                    upkeep += 2
-                elif cell == "O":
-                    upkeep += 1
-                elif cell == "*":
-                    road_segments.append((x, y))
-
-        profit += len([cell for row in self.grid for cell in row if cell == "R"])
-        upkeep += len(clusters)
-        upkeep += len(road_segments)
+        for (row, col), cell in self.map.grid.items():
+            if cell == "R" and (row, col) not in visited:
+                dfs(row, col)
+                upkeep += 1
 
         return profit, upkeep
 
     def calculate_score(self):
         score = 0
-        for y in range(len(self.grid)):
-            for x in range(len(self.grid[0])):
-                cell = self.grid[y][x]
+        min_row, max_row, min_col, max_col = self.get_bounds()
 
+        for row in range(min_row, max_row + 1):
+            for col in range(min_col, max_col + 1):
+                cell = self.map.grid.get((row, col), ".")
+                adj = self.get_adjacent(row, col)
                 if cell == "R":
-                    adjacent = self.get_adjacent_cells(x, y)
-                    if "I" in adjacent:
+                    if "I" in adj:
                         score += 1
                     else:
+<<<<<<< HEAD
                         score += adjacent.count("R") + adjacent.count("C")
                         score += 2 * adjacent.count("O")
+=======
+                        score += adj.count("R") + adj.count("C") + 2 * adj.count("O")
+>>>>>>> 81951b92598ca25c95b3f0635bf83e6bc2aa48e2
                 elif cell == "I":
-                    pass
+                    score += 0
                 elif cell == "C":
-                    adjacent = self.get_adjacent_cells(x, y)
-                    score += adjacent.count("C")
+                    score += adj.count("C")
                 elif cell == "O":
-                    adjacent = self.get_adjacent_cells(x, y)
-                    score += adjacent.count("O")
+                    score += adj.count("O")
                 elif cell == "*":
-                    row = self.grid[y]
-                    connected_roads = sum(1 for c in row if c == "*")
-                    score += connected_roads
-
-        total_industries = sum(row.count("I") for row in self.grid)
-        score += total_industries
-
+                    score += 1
+        score += sum(1 for b in self.map.grid.values() if b == "I")
         return score
 
-    def get_adjacent_cells(self, x, y):
-        adj = []
-        for dx, dy in [(-1,0),(1,0),(0,-1),(0,1)]:
-            nx, ny = x + dx, y + dy
-            if 0 <= nx < len(self.grid[0]) and 0 <= ny < len(self.grid):
-                adj.append(self.grid[ny][nx])
-        return adj
+    def place_building(self, pos):
+        if self.demolish_mode:
+            return False, "Cannot place building in demolish mode."
+
+        x, y = pos
+        # Calculate grid coords based on current tile size and stats height
+        row = (y - STATS_HEIGHT) // self.map.tile_size
+        col = x // self.map.tile_size
+
+        # Allow placement anywhere — no adjacency check
+        if (row, col) not in self.map.grid:
+            self.map.grid[(row, col)] = self.selected_building
+
+            # If placed building on border, expand grid
+            if self.map.is_on_border(row, col):
+                self.map.expand_grid()
+
+            self.turn += 1
+            self.score = self.calculate_score()
+            self.map.first_turn = False
+            return True, "Building placed."
+        else:
+            return False, "Cell already occupied."
+
+    def demolish_building(self, pos):
+        x, y = pos
+        row = (y - STATS_HEIGHT) // self.map.tile_size
+        col = x // self.map.tile_size
+        if (row, col) in self.map.grid:
+            del self.map.grid[(row, col)]
+            self.score = self.calculate_score()
+            self.turn += 1
+            return True, "Building demolished."
+        return False, "No building to demolish here."
 
     def next_turn(self):
         profit, upkeep = self.calculate_profit_and_upkeep()
         net = profit - upkeep
-        self.coins += net
-
         if net < 0:
             self.loss_turns += 1
         else:
             self.loss_turns = 0
-
         self.score = self.calculate_score()
-        self.turn += 1
-        return net
-
-    def display_status(self):
-        print(f"\nTurn: {self.turn}")
-        print("Coins: Unlimited")
-        print(f"Score: {self.score}")
-        profit, upkeep = self.calculate_profit_and_upkeep()
-        print(f"Profit: {profit}, Upkeep: {upkeep}, Net: {profit - upkeep}")
-        for row in self.grid:
-            print(" ".join(row))
 
     def is_game_over(self):
         return self.loss_turns >= self.max_loss_turns
+    
+    def save_game(self, filename="freeplay_save.pkl"):
+        data = {
+            'grid': self.map.grid,
+            'turn': self.turn,
+            'loss_turns': self.loss_turns,
+            'score': self.score
+        }
+        with open(filename, 'wb') as f:
+            pickle.dump(data, f)
 
-# --------------------------------------------------------------
-
-SCREEN_WIDTH = 800
-STATS_HEIGHT = 50
-
-selected_building = "R"  # Default building
-
-def draw_stats(screen, game, stats_height):
+def draw_stats(screen, game):
     font = pygame.font.SysFont("Arial", 20)
-    screen.fill((220, 220, 220), (0, 0, screen.get_width(), stats_height))
-
-    turn_text = font.render(f"Turn: {game.turn}", True, (0, 0, 0))
-    coins_text = font.render(f"Coins: Unlimited", True, (0, 0, 0))
-    score_text = font.render(f"Score: {game.score}", True, (0, 0, 0))
+    pygame.draw.rect(screen, WHITE, (0, 0, SCREEN_WIDTH, STATS_HEIGHT))
     profit, upkeep = game.calculate_profit_and_upkeep()
-    net_text = font.render(f"Profit: {profit}  Upkeep: {upkeep}  Net: {profit - upkeep}", True, (0, 0, 0))
-
-    screen.blit(turn_text, (10, 5))
-    screen.blit(coins_text, (150, 5))
-    screen.blit(score_text, (300, 5))
-    screen.blit(net_text, (450, 5))
+    net = profit - upkeep
+    mode = "Demolish" if game.demolish_mode else game.selected_building
+    stats = f"Turn: {game.turn} | Score: {game.score} | Profit: {profit} | Upkeep: {upkeep} | Net: {net} | Mode: {mode}"
+    label = font.render(stats, True, BLACK)
+    screen.blit(label, (10, 10))
 
 def main():
     pygame.init()
-    pygame.font.init()
-
     game = FreePlayGame()
-    city_map = Map(grid_size=len(game.grid), screen_width=SCREEN_WIDTH, stats_display_height=STATS_HEIGHT)
-    city_map.initialize_screen()
-
     clock = pygame.time.Clock()
-    running = True
+    message = ""
 
-    while running:
-        city_map.draw()
-        draw_stats(city_map.screen, game, STATS_HEIGHT)
-        pygame.display.flip()
+    while True:
+        game.map.draw()
+        draw_stats(game.map.screen, game)
+        if message:
+            font = pygame.font.SysFont("Arial", 20)
+            msg_surface = font.render(message, True, (255, 0, 0))
+            game.map.screen.blit(msg_surface, (10, STATS_HEIGHT + 5))
 
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
-                running = False
+                pygame.quit()
+                return
+
+            elif event.type == pygame.KEYDOWN:
+                if event.key in KEY_TO_BUILDING:
+                    game.selected_building = KEY_TO_BUILDING[event.key]
+                    game.demolish_mode = False
+                    message = f"Selected building: {game.selected_building}"
+                elif event.key == pygame.K_d:
+                    game.demolish_mode = not game.demolish_mode
+                    message = "Demolish mode ON" if game.demolish_mode else "Demolish mode OFF"
+                elif event.key == pygame.K_s:
+                    game.save_game()
+                    message = "Game saved."
+                elif event.key == pygame.K_ESCAPE:
+                    pygame.quit()
+                    return
 
             elif event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
-                pos = pygame.mouse.get_pos()
+                pos = event.pos
                 if pos[1] < STATS_HEIGHT:
                     continue
-
-                row = (pos[1] - STATS_HEIGHT) // city_map.tile_size
-                col = pos[0] // city_map.tile_size
-
-                if 0 <= row < len(game.grid) and 0 <= col < len(game.grid[0]):
-                    placed = game.place_building(selected_building, col, row)
-                    if placed:
-                        city_map.grid[(row, col)] = selected_building
-
-                        if len(game.grid) != city_map.grid_size:
-                            city_map.grid = {}
-                            for y, row_vals in enumerate(game.grid):
-                                for x, val in enumerate(row_vals):
-                                    if val != ".":
-                                        city_map.grid[(y, x)] = val
-                            city_map.grid_size = len(game.grid)
-                            city_map.tile_size = city_map.screen.get_width() // city_map.grid_size
-                            new_height = city_map.grid_size * city_map.tile_size + STATS_HEIGHT
-                            city_map.screen = pygame.display.set_mode((city_map.screen.get_width(), new_height))
+                if game.demolish_mode:
+                    success, msg = game.demolish_building(pos)
+                    if success:
                         game.next_turn()
+                    message = msg
+                else:
+                    success, msg = game.place_building(pos)
+                    if success:
+                        game.next_turn()
+                    message = msg
 
-                    else:
-                        print(f"Cannot place building at ({col}, {row})")
+        if game.is_game_over():
+            font = pygame.font.SysFont("Arial", 40)
+            label = font.render("Game Over: 20 turns of loss", True, (200, 0, 0))
+            game.map.screen.blit(label, (100, SCREEN_WIDTH // 2))
+            pygame.display.flip()
+            pygame.time.wait(3000)
+            break
 
+        pygame.display.flip()
         clock.tick(30)
-
-    pygame.quit()
 
 if __name__ == "__main__":
     main()

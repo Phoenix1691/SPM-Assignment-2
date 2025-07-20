@@ -1,5 +1,12 @@
+"""
+Press 1 or 2 for the randomized building
+Press D - Demolish
+Press S - Save game
+"""
+
 import pygame
 import random
+import pickle
 from mapv2 import Map  # Ensure mapv2.py with Map class is in the same folder
 
 SCREEN_WIDTH = 800
@@ -12,7 +19,7 @@ class ArcadeGame:
     def __init__(self):
         self.map = Map(GRID_SIZE, SCREEN_WIDTH, STATS_HEIGHT)
         self.map.initialize_screen()
-        self.turn = 1
+        self.turn = 0
         self.coins = 16
         self.score = 0
         self.building_choices = self.random_building_choices()
@@ -29,10 +36,20 @@ class ArcadeGame:
         if success:
             self.coins -= 1
             self.turn += 1
+
+            # Calculate coins earned based on new building adjacency
+            coins_gained = self.calculate_coins_from_new_building(pos, building)
+            self.coins += coins_gained
+
             self.score = self.calculate_score()
             self.building_choices = self.random_building_choices()
             self.map.first_turn = False
-            return True, "Building placed."
+
+            # Check for game over: no coins or board full
+            if self.coins <= 0 or len(self.map.grid) >= self.map.grid_size ** 2:
+                self.game_over = True
+
+            return True, f"Building placed. Coins gained: {coins_gained}"
         else:
             return False, "Cannot place building here."
 
@@ -56,6 +73,28 @@ class ArcadeGame:
             if 0 <= r < self.map.grid_size and 0 <= c < self.map.grid_size:
                 adj.append(self.map.grid.get((r, c), "."))
         return adj
+
+    def calculate_coins_from_new_building(self, pos, building):
+        x, y = pos
+        row = (y - STATS_HEIGHT) // self.map.tile_size
+        col = x // self.map.tile_size
+        coins = 0
+        adjacent_buildings = self.get_adjacent(row, col)
+
+        if building == 'R':
+            # Residential gets coins for each adjacent Industry or Commercial
+            coins = adjacent_buildings.count('I') + adjacent_buildings.count('C')
+
+        elif building == 'I':
+            # Industry generates coins equal to adjacent Residentials
+            coins = adjacent_buildings.count('R')
+
+        elif building == 'C':
+            # Commercial generates coins equal to adjacent Residentials
+            coins = adjacent_buildings.count('R')
+
+        # Parks and Roads generate no coins
+        return coins
 
     def calculate_score(self):
         score = 0
@@ -82,6 +121,20 @@ class ArcadeGame:
                 score += connected_roads
         score += total_industries
         return score
+    def save_game(self, filename="arcade_save.pkl"):
+        data = {
+            'grid': self.map.grid,
+            'turn': self.turn,
+            'coins': self.coins,
+            'score': self.score,
+            'building_choices': self.building_choices,
+            'selected_building': self.selected_building,
+            'game_over': self.game_over
+        }
+        with open(filename, 'wb') as f:
+            pickle.dump(data, f)
+    
+
 
 def draw_stats(screen, game):
     font = pygame.font.SysFont("Arial", 24)
@@ -106,7 +159,6 @@ def main():
         draw_stats(game.map.screen, game)
 
         if message:
-            # Display message below stats bar
             msg_surface = font.render(message, True, (255, 0, 0))
             game.map.screen.blit(msg_surface, (10, STATS_HEIGHT + 5))
 
@@ -128,6 +180,9 @@ def main():
                     demolishing = True
                     placing_building = None
                     message = "Demolish mode: Click on building to demolish."
+                elif event.key == pygame.K_s:
+                    game.save_game()
+                    message = "Game saved."
                 elif event.key == pygame.K_ESCAPE:
                     pygame.quit()
                     return
@@ -143,9 +198,14 @@ def main():
                         placing_building = None
                     message = msg
 
+        # End game if conditions met
+        if game.game_over:
+            message = "Game Over! Final Score: " + str(game.score)
+
         pygame.display.flip()
         clock.tick(30)
 
 if __name__ == "__main__":
     main()
+
 
