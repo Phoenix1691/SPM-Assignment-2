@@ -106,7 +106,6 @@ class FreePlayGame:
                     else:
                         score += adjacent.count("R") + adjacent.count("C")
                         score += 2 * adjacent.count("O")
-
                 elif cell == "I":
                     pass
                 elif cell == "C":
@@ -235,5 +234,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-
-

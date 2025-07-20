@@ -21,7 +21,7 @@ class Map:
         self.screen = None
         self.expansion_count = 0
         self.first_turn = True
-        
+
     def attempt_place_building(self, pos, building_type):
         """Smart placement manager for arcade mode with adjacency check after first turn"""
         x, y = pos
@@ -70,7 +70,6 @@ class Map:
         screen_height = screen_width + self.stats_display_height
         self.screen = pygame.display.set_mode((screen_width, screen_height))
         pygame.display.set_caption("Ngee Ann City")
-
 
     def draw(self):
         self.screen.fill(WHITE)
