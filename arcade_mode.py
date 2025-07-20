@@ -133,9 +133,6 @@ class ArcadeGame:
         }
         with open(filename, 'wb') as f:
             pickle.dump(data, f)
-    
-
-
 def draw_stats(screen, game):
     font = pygame.font.SysFont("Arial", 24)
     screen.fill((230, 230, 230), (0, 0, SCREEN_WIDTH, STATS_HEIGHT))
