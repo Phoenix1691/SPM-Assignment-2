@@ -112,8 +112,7 @@ class FreePlayGame:
                     if "I" in adj:
                         score += 1
                     else:
-                        score += adjacent.count("R") + adjacent.count("C")
-                        score += 2 * adjacent.count("O")
+                        # Fixed here: replaced undefined 'adjacent' with 'adj'
                         score += adj.count("R") + adj.count("C") + 2 * adj.count("O")
                 elif cell == "I":
                     score += 0
@@ -131,20 +130,21 @@ class FreePlayGame:
             return False, "Cannot place building in demolish mode."
 
         x, y = pos
+        # Calculate grid coords based on current tile size and stats height
         row = (y - STATS_HEIGHT) // self.map.tile_size
         col = x // self.map.tile_size
 
+        # Allow placement anywhere — no adjacency check
         if (row, col) not in self.map.grid:
             self.map.grid[(row, col)] = self.selected_building
+
+            # If placed building on border, expand grid
             if self.map.is_on_border(row, col):
                 self.map.expand_grid()
+
             self.turn += 1
             self.score = self.calculate_score()
             self.map.first_turn = False
-
-            # DEBUG: print grid and upkeep after placement
-            self.print_grid_and_upkeep()
-
             return True, "Building placed."
         else:
             return False, "Cell already occupied."
@@ -157,10 +157,6 @@ class FreePlayGame:
             del self.map.grid[(row, col)]
             self.score = self.calculate_score()
             self.turn += 1
-
-            # DEBUG: print grid and upkeep after demolish
-            self.print_grid_and_upkeep()
-
             return True, "Building demolished."
         return False, "No building to demolish here."
 
@@ -186,17 +182,6 @@ class FreePlayGame:
         with open(filename, 'wb') as f:
             pickle.dump(data, f)
 
-    # DEBUG helper method to print the grid and upkeep
-    def print_grid_and_upkeep(self):
-        min_row, max_row, min_col, max_col = self.get_bounds()
-        print("\nCurrent Grid:")
-        for r in range(min_row, max_row + 1):
-            row_str = ""
-            for c in range(min_col, max_col + 1):
-                row_str += self.map.grid.get((r, c), ".") + " "
-            print(row_str)
-        profit, upkeep = self.calculate_profit_and_upkeep()
-        print(f"Profit: {profit}, Upkeep: {upkeep}")
 
 
 def draw_stats(screen, game):
