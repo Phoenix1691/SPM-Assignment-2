@@ -112,8 +112,9 @@ class FreePlayGame:
                     if "I" in adj:
                         score += 1
                     else:
-                        score += adj.count("R") + adj.count("C")
-                        score += 2 * adj.count("O")
+                        score += adjacent.count("R") + adjacent.count("C")
+                        score += 2 * adjacent.count("O")
+                        score += adj.count("R") + adj.count("C") + 2 * adj.count("O")
                 elif cell == "I":
                     score += 0
                 elif cell == "C":
@@ -196,6 +197,7 @@ class FreePlayGame:
             print(row_str)
         profit, upkeep = self.calculate_profit_and_upkeep()
         print(f"Profit: {profit}, Upkeep: {upkeep}")
+
 
 def draw_stats(screen, game):
     font = pygame.font.SysFont("Arial", 20)
