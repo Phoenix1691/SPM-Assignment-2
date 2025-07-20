@@ -13,6 +13,7 @@ BUILDING_COLORS = {
 }
 
 class Map:
+    # def __init__(self, game_mode, grid_size, screen_width, stats_display_height):
     def __init__(game_mode, self, grid_size, screen_width, stats_display_height):
         self.game_mode = game_mode
         self.grid_size = grid_size
@@ -73,21 +74,54 @@ class Map:
         self.screen = pygame.display.set_mode((screen_width, screen_height))
         pygame.display.set_caption("Ngee Ann City")
 
+    # def draw(self):
+    #     self.screen.fill(WHITE)
+    #     for row in range(self.grid_size):
+    #         for col in range(self.grid_size):
+    #             x = col * self.tile_size
+    #             y = row * self.tile_size + self.stats_display_height
+    #             rect = pygame.Rect(x, y, self.tile_size, self.tile_size)
+
+    #             # Determine cell color
+    #             building = self.grid.get((row, col), "")
+    #             color = BUILDING_COLORS.get(building, GRAY if (row + col) % 2 == 0 else WHITE)
+
+    #             pygame.draw.rect(self.screen, color, rect)
+    #             pygame.draw.rect(self.screen, BLACK, rect, 1)
+
     def draw(self):
-        self.screen.fill(WHITE)
-        for row in range(self.grid_size):
-            for col in range(self.grid_size):
-                x = col * self.tile_size
-                y = row * self.tile_size + self.stats_display_height
-                rect = pygame.Rect(x, y, self.tile_size, self.tile_size)
+        self.screen.fill((255, 255, 255))  # Clear the screen
 
-                # Determine cell color
-                building = self.grid.get((row, col), "")
-                color = BUILDING_COLORS.get(building, GRAY if (row + col) % 2 == 0 else WHITE)
+        font = pygame.font.SysFont("Arial", self.tile_size // 2)
 
-                pygame.draw.rect(self.screen, color, rect)
-                pygame.draw.rect(self.screen, BLACK, rect, 1)
-                
+        for (row, col), building in self.grid.items():
+            x = col * self.tile_size
+            y = row * self.tile_size + self.stats_display_height
+
+            # Assign color based on building type
+            if building == "R":
+                color = (144, 238, 144)  # light green
+            elif building == "I":
+                color = (169, 169, 169)  # dark gray
+            elif building == "C":
+                color = (135, 206, 250)  # light blue
+            elif building == "O":
+                color = (238, 232, 170)  # khaki
+            elif building == "*":
+                color = (255, 99, 71)    # tomato (red)
+            else:
+                color = (211, 211, 211)  # light gray for default/unknown
+
+            rect = pygame.Rect(x, y, self.tile_size, self.tile_size)
+            pygame.draw.rect(self.screen, color, rect)
+            pygame.draw.rect(self.screen, (0, 0, 0), rect, 1)
+
+            # Draw the symbol in the center
+            text_surface = font.render(building, True, (0, 0, 0))
+            text_rect = text_surface.get_rect(center=rect.center)
+            self.screen.blit(text_surface, text_rect)
+
+
     def draw_building_options(self, building_options, selected_index):
         font = pygame.font.SysFont("Arial", 24)
         for i, building in enumerate(building_options):

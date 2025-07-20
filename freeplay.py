@@ -1,3 +1,4 @@
+# freeplay.py - Free play mode for the city-building game
 """
 Press 1: Residential (R)
 Press 2: Industry (I)

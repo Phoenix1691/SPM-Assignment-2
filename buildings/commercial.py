@@ -1,3 +1,4 @@
+# commercial.py - This file defines the Commercial building class for the city-building game.
 from buildings.building_parent import Building
 
 class commercial (Building):

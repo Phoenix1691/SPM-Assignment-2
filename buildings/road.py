@@ -1,3 +1,4 @@
+# buildings/road.py - This file defines the Road building type in the city-building game.
 # • Road (*): Scores 1 point per connected road (*) in the same row.
 #Park (O): Each park costs 1 coin to upkeep.
 

@@ -1,3 +1,4 @@
+# buildings/building_parent.py - Base class for all building types in the game
 class Building:
     def __init__(self):
         self.type = None

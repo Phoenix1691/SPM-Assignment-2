@@ -1,3 +1,4 @@
+# industry.py - Industry building class for the city-building game
 from buildings.building_parent import Building
 
 class industry(Building):

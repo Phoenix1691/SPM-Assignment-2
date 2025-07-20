@@ -1,3 +1,4 @@
+# arcade_mode.py - Arcade mode for the game with randomized building choices
 """
 Press 1 or 2 for the randomized building
 Press D - Demolish
@@ -17,7 +18,8 @@ BUILDINGS = ['R', 'I', 'C', 'O', '*']
 
 class ArcadeGame:
     def __init__(self):
-        self.map = Map(GRID_SIZE, SCREEN_WIDTH, STATS_HEIGHT)
+        # self.map = Map(GRID_SIZE, SCREEN_WIDTH, STATS_HEIGHT)
+        self.map = Map("arcade", GRID_SIZE, SCREEN_WIDTH, STATS_HEIGHT)
         self.map.initialize_screen()
         self.turn = 0
         self.coins = 16
@@ -134,6 +136,7 @@ class ArcadeGame:
         }
         with open(filename, 'wb') as f:
             pickle.dump(data, f)
+
 def draw_stats(screen, game):
     font = pygame.font.SysFont("Arial", 24)
     screen.fill((230, 230, 230), (0, 0, SCREEN_WIDTH, STATS_HEIGHT))

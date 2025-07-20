@@ -1,3 +1,4 @@
+# randombulidings.py - Module to generate random building types for the game
 import random
 
 BUILDING_TYPES = ["R", "I", "C", "O", "*"]
