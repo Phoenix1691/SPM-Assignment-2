@@ -13,8 +13,7 @@ BUILDING_COLORS = {
 }
 
 class Map:
-    # def __init__(self, game_mode, grid_size, screen_width, stats_display_height):
-    def __init__(game_mode, self, grid_size, screen_width, stats_display_height):
+    def __init__(self, game_mode, grid_size, screen_width, stats_display_height):
         self.game_mode = game_mode
         self.grid_size = grid_size
         self.stats_display_height = stats_display_height
@@ -94,32 +93,47 @@ class Map:
 
         font = pygame.font.SysFont("Arial", self.tile_size // 2)
 
-        for (row, col), building in self.grid.items():
-            x = col * self.tile_size
-            y = row * self.tile_size + self.stats_display_height
+        # Draw the entire grid (empty and filled cells)
+        for row in range(self.grid_size):
+            for col in range(self.grid_size):
+                x = col * self.tile_size
+                y = row * self.tile_size + self.stats_display_height
+                rect = pygame.Rect(x, y, self.tile_size, self.tile_size)
 
-            # Assign color based on building type
-            if building == "R":
-                color = (144, 238, 144)  # light green
-            elif building == "I":
-                color = (169, 169, 169)  # dark gray
-            elif building == "C":
-                color = (135, 206, 250)  # light blue
-            elif building == "O":
-                color = (238, 232, 170)  # khaki
-            elif building == "*":
-                color = (255, 99, 71)    # tomato (red)
-            else:
-                color = (211, 211, 211)  # light gray for default/unknown
+                # Check if there's a building at this position
+                building = self.grid.get((row, col), None)
+                
+                if building:
+                    # Assign color based on building type
+                    if building == "R":
+                        color = (144, 238, 144)  # light green
+                    elif building == "I":
+                        color = (169, 169, 169)  # dark gray
+                    elif building == "C":
+                        color = (135, 206, 250)  # light blue
+                    elif building == "O":
+                        color = (238, 232, 170)  # khaki
+                    elif building == "*":
+                        color = (255, 99, 71)    # tomato (red)
+                    else:
+                        color = (211, 211, 211)  # light gray for default/unknown
 
-            rect = pygame.Rect(x, y, self.tile_size, self.tile_size)
-            pygame.draw.rect(self.screen, color, rect)
-            pygame.draw.rect(self.screen, (0, 0, 0), rect, 1)
+                    pygame.draw.rect(self.screen, color, rect)
+                    
+                    # Draw the symbol in the center
+                    text_surface = font.render(building, True, (0, 0, 0))
+                    text_rect = text_surface.get_rect(center=rect.center)
+                    self.screen.blit(text_surface, text_rect)
+                else:
+                    # Empty cell - draw with alternating pattern
+                    if (row + col) % 2 == 0:
+                        color = (240, 240, 240)  # light gray
+                    else:
+                        color = (250, 250, 250)  # very light gray
+                    pygame.draw.rect(self.screen, color, rect)
 
-            # Draw the symbol in the center
-            text_surface = font.render(building, True, (0, 0, 0))
-            text_rect = text_surface.get_rect(center=rect.center)
-            self.screen.blit(text_surface, text_rect)
+                # Draw grid lines
+                pygame.draw.rect(self.screen, (0, 0, 0), rect, 1)
 
 
     def draw_building_options(self, building_options, selected_index):
@@ -175,7 +189,7 @@ class Map:
         self.grid_size += expansion * 2
         self.expansion_count += 1
 
-        # 🔁 Recalculate tile size to fit updated grid in original window width
+        # Recalculate tile size to fit updated grid in original window width
         screen_width = self.screen.get_width()
         self.tile_size = screen_width // self.grid_size
 
