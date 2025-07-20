@@ -8,6 +8,7 @@ Press D: Demolish
 Press S: Save game
 """
 
+from more_itertools import adjacent
 import pygame
 import os
 import pickle
@@ -121,12 +122,9 @@ class FreePlayGame:
                     if "I" in adj:
                         score += 1
                     else:
-<<<<<<< HEAD
                         score += adjacent.count("R") + adjacent.count("C")
                         score += 2 * adjacent.count("O")
-=======
                         score += adj.count("R") + adj.count("C") + 2 * adj.count("O")
->>>>>>> 81951b92598ca25c95b3f0635bf83e6bc2aa48e2
                 elif cell == "I":
                     score += 0
                 elif cell == "C":
