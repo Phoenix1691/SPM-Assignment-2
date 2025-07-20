@@ -8,7 +8,7 @@ from mapv2 import Map
 SCREEN_WIDTH = 800
 STATS_HEIGHT = 50
 INITIAL_GRID_SIZE = 10
-
+MODE = "Arcade"
 # Selected building type (e.g., from building selection module)
 selected_building = "R"
 
@@ -16,7 +16,7 @@ selected_building = "R"
 pygame.init()
 pygame.font.init()
 
-city_map = Map(INITIAL_GRID_SIZE, SCREEN_WIDTH, STATS_HEIGHT)
+city_map = Map(MODE, INITIAL_GRID_SIZE, SCREEN_WIDTH, STATS_HEIGHT)
 city_map.initialize_screen()
 
 # Main Loop
