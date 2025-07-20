@@ -55,39 +55,10 @@ class FreePlayGame:
         return adj
 
     def calculate_profit_and_upkeep(self):
-        profit, upkeep = 0, 0
-        road_connected = set()
+        profit = 0
+        upkeep = 0
 
-        min_row, max_row, min_col, max_col = self.get_bounds()
-
-        for row in range(min_row, max_row + 1):
-            start = None
-            for col in range(min_col, max_col + 2):
-                cell = self.map.grid.get((row, col), ".") if col <= max_col else "."
-                if cell == "*":
-                    if start is None:
-                        start = col
-                else:
-                    if start is not None:
-                        if col - start > 1:
-                            for rx in range(start, col):
-                                road_connected.add((row, rx))
-                        start = None
-         # Vertical road check
-        for col in range(min_col, max_col + 1):
-            start = None
-            for row in range(min_row, max_row + 2):
-                cell = self.map.grid.get((row, col), ".") if row <= max_row else "."
-                if cell == "*":
-                    if start is None:
-                        start = row
-                    else:
-                        if start is not None:
-                            if row - start > 1:
-                                for ry in range(start, row):
-                                    road_connected.add((ry, col))
-                            start = None
-
+        # 1. Building profit and base upkeep
         for (row, col), cell in self.map.grid.items():
             if cell == "R":
                 profit += 1
@@ -99,28 +70,55 @@ class FreePlayGame:
                 upkeep += 2
             elif cell == "O":
                 upkeep += 1
-            elif cell == "*":
-                if (row, col) not in road_connected:
-                    upkeep += 1
 
-        # Cluster upkeep logic
-        visited = set()
-        def dfs(r, c):
+        # 2. Road upkeep — find road segments and check if connected to any building
+        visited_roads = set()
+
+        def dfs_road(r, c):
             stack = [(r, c)]
+            segment = []
             while stack:
-                rr, cc = stack.pop()
-                if (rr, cc) in visited:
+                x, y = stack.pop()
+                if (x, y) in visited_roads or self.map.grid.get((x, y)) != "*":
                     continue
-                visited.add((rr, cc))
-                for dx, dy in [(-1,0),(1,0),(0,-1),(0,1)]:
-                    nr, nc = rr + dy, cc + dx
-                    if self.map.grid.get((nr, nc)) == "R" and (nr, nc) not in visited:
-                        stack.append((nr, nc))
+                visited_roads.add((x, y))
+                segment.append((x, y))
+                for dx, dy in [(-1, 0), (1, 0), (0, -1), (0, 1)]:
+                    stack.append((x + dx, y + dy))
+            return segment
 
         for (row, col), cell in self.map.grid.items():
-            if cell == "R" and (row, col) not in visited:
-                dfs(row, col)
-                upkeep += 1
+            if cell == "*" and (row, col) not in visited_roads:
+                segment = dfs_road(row, col)
+                connected = False
+                for x, y in segment:
+                    for dx, dy in [(-1, 0), (1, 0), (0, -1), (0, 1)]:
+                        neighbor = self.map.grid.get((x + dx, y + dy))
+                        if neighbor in {"R", "I", "C", "O"}:
+                            connected = True
+                            break
+                    if connected:
+                        break
+                if not connected:
+                    upkeep += 1  # Unconnected road segment
+
+        # 3. Residential clusters upkeep (1 per connected group of Rs)
+        visited_res = set()
+
+        def dfs_res(r, c):
+            stack = [(r, c)]
+            while stack:
+                x, y = stack.pop()
+                if (x, y) in visited_res or self.map.grid.get((x, y)) != "R":
+                    continue
+                visited_res.add((x, y))
+                for dx, dy in [(-1, 0), (1, 0), (0, -1), (0, 1)]:
+                    stack.append((x + dx, y + dy))
+
+        for (row, col), cell in self.map.grid.items():
+            if cell == "R" and (row, col) not in visited_res:
+                dfs_res(row, col)
+                upkeep += 1  # One coin per residential cluster
 
         return profit, upkeep
 
