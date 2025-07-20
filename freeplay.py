@@ -57,7 +57,7 @@ class FreePlayGame:
     def calculate_profit_and_upkeep(self):
         profit, upkeep = 0, 0
 
-        # Check profit and upkeep for each building type
+        # Profit and upkeep for buildings except roads
         for (row, col), cell in self.map.grid.items():
             if cell == "R":
                 profit += 1
@@ -69,34 +69,49 @@ class FreePlayGame:
                 upkeep += 2
             elif cell == "O":
                 upkeep += 1
-            elif cell == "*":
-                # Road upkeep: cost if no adjacent road segment
-                connected = False
+
+        # Find connected clusters of roads ('*')
+        visited_roads = set()
+
+        def dfs_road(r, c):
+            stack = [(r, c)]
+            cluster = []
+            while stack:
+                rr, cc = stack.pop()
+                if (rr, cc) in visited_roads:
+                    continue
+                visited_roads.add((rr, cc))
+                cluster.append((rr, cc))
                 for dx, dy in [(-1,0),(1,0),(0,-1),(0,1)]:
-                    adj_cell = self.map.grid.get((row + dy, col + dx))
-                    if adj_cell == "*":
-                        connected = True
-                        break
-                if not connected:
+                    nr, nc = rr + dy, cc + dx
+                    if self.map.grid.get((nr, nc)) == "*" and (nr, nc) not in visited_roads:
+                        stack.append((nr, nc))
+            return cluster
+
+        # Only add upkeep if road cluster size is 1 (isolated)
+        for (row, col), cell in self.map.grid.items():
+            if cell == "*" and (row, col) not in visited_roads:
+                cluster = dfs_road(row, col)
+                if len(cluster) == 1:
                     upkeep += 1
 
-        # Residential cluster upkeep: 1 coin per cluster of connected R's
-        visited = set()
-        def dfs(r, c):
+        # Residential cluster upkeep
+        visited_res = set()
+        def dfs_res(r, c):
             stack = [(r, c)]
             while stack:
                 rr, cc = stack.pop()
-                if (rr, cc) in visited:
+                if (rr, cc) in visited_res:
                     continue
-                visited.add((rr, cc))
+                visited_res.add((rr, cc))
                 for dx, dy in [(-1,0),(1,0),(0,-1),(0,1)]:
                     nr, nc = rr + dy, cc + dx
-                    if self.map.grid.get((nr, nc)) == "R" and (nr, nc) not in visited:
+                    if self.map.grid.get((nr, nc)) == "R" and (nr, nc) not in visited_res:
                         stack.append((nr, nc))
 
         for (row, col), cell in self.map.grid.items():
-            if cell == "R" and (row, col) not in visited:
-                dfs(row, col)
+            if cell == "R" and (row, col) not in visited_res:
+                dfs_res(row, col)
                 upkeep += 1
 
         return profit, upkeep
@@ -132,15 +147,12 @@ class FreePlayGame:
             return False, "Cannot place building in demolish mode."
 
         x, y = pos
-        # Calculate grid coords based on current tile size and stats height
         row = (y - STATS_HEIGHT) // self.map.tile_size
         col = x // self.map.tile_size
 
-        # Allow placement anywhere — no adjacency check
         if (row, col) not in self.map.grid:
             self.map.grid[(row, col)] = self.selected_building
 
-            # If placed building on border, expand grid
             if self.map.is_on_border(row, col):
                 self.map.expand_grid()
 
@@ -256,4 +268,5 @@ def main():
 
 if __name__ == "__main__":
     main()
+
 
