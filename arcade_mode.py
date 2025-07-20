@@ -121,6 +121,7 @@ class ArcadeGame:
                 score += connected_roads
         score += total_industries
         return score
+    
     def save_game(self, filename="arcade_save.pkl"):
         data = {
             'grid': self.map.grid,
@@ -139,7 +140,6 @@ def draw_stats(screen, game):
     screen.blit(font.render(f"Turn: {game.turn}", True, (0, 0, 0)), (10, 10))
     screen.blit(font.render(f"Coins: {game.coins}", True, (0, 0, 0)), (150, 10))
     screen.blit(font.render(f"Score: {game.score}", True, (0, 0, 0)), (300, 10))
-    screen.blit(font.render(f"1: {game.building_choices[0]}   2: {game.building_choices[1]}", True, (0, 0, 0)), (500, 10))
 
 def main():
     pygame.init()
@@ -151,9 +151,24 @@ def main():
     demolishing = False
     message = ""
 
+    button1 = pygame.Rect(500, 10, 40, 30)
+    button2 = pygame.Rect(550, 10, 40, 30)
+    demolish_btn = pygame.Rect(610, 10, 90, 30)
+    save_btn = pygame.Rect(710, 10, 80, 30)
+
     while True:
         game.map.draw()
         draw_stats(game.map.screen, game)
+
+        pygame.draw.rect(game.map.screen, (180, 180, 255), button1)
+        pygame.draw.rect(game.map.screen, (180, 180, 255), button2)
+        pygame.draw.rect(game.map.screen, (255, 180, 180), demolish_btn)
+        pygame.draw.rect(game.map.screen, (180, 255, 180), save_btn)
+
+        game.map.screen.blit(font.render(game.building_choices[0], True, (0, 0, 0)), button1.move(10, 5))
+        game.map.screen.blit(font.render(game.building_choices[1], True, (0, 0, 0)), button2.move(10, 5))
+        game.map.screen.blit(font.render("Demolish", True, (0, 0, 0)), demolish_btn.move(5, 5))
+        game.map.screen.blit(font.render("Save", True, (0, 0, 0)), save_btn.move(10, 5))
 
         if message:
             msg_surface = font.render(message, True, (255, 0, 0))
@@ -163,39 +178,33 @@ def main():
             if event.type == pygame.QUIT:
                 pygame.quit()
                 return
-
-            elif event.type == pygame.KEYDOWN:
-                if event.key == pygame.K_1:
-                    placing_building = game.building_choices[0]
-                    demolishing = False
-                    message = f"Placing building: {placing_building}. Click on grid."
-                elif event.key == pygame.K_2:
-                    placing_building = game.building_choices[1]
-                    demolishing = False
-                    message = f"Placing building: {placing_building}. Click on grid."
-                elif event.key == pygame.K_d:
-                    demolishing = True
-                    placing_building = None
-                    message = "Demolish mode: Click on building to demolish."
-                elif event.key == pygame.K_s:
-                    game.save_game()
-                    message = "Game saved."
-                elif event.key == pygame.K_ESCAPE:
-                    pygame.quit()
-                    return
-
             elif event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
                 pos = event.pos
-                if demolishing:
-                    success, msg = game.demolish_building(pos)
-                    message = msg
-                elif placing_building:
-                    success, msg = game.place_building(pos, placing_building)
-                    if success:
-                        placing_building = None
+                if button1.collidepoint(pos):
+                    placing_building = game.building_choices[0]
+                    demolishing = False
+                    message = f"Placing: {placing_building}"
+                elif button2.collidepoint(pos):
+                    placing_building = game.building_choices[1]
+                    demolishing = False
+                    message = f"Placing: {placing_building}"
+                elif demolish_btn.collidepoint(pos):
+                    demolishing = True
+                    placing_building = None
+                    message = "Demolish mode."
+                elif save_btn.collidepoint(pos):
+                    game.save_game()
+                    message = "Game saved."
+                else:
+                    msg= ""
+                    if demolishing:
+                        success, msg = game.demolish_building(pos)
+                    elif placing_building:
+                        success, msg = game.place_building(pos, placing_building)
+                        if success:
+                            placing_building = None
                     message = msg
 
-        # End game if conditions met
         if game.game_over:
             message = "Game Over! Final Score: " + str(game.score)
 
@@ -204,5 +213,76 @@ def main():
 
 if __name__ == "__main__":
     main()
+# def draw_stats(screen, game):
+#     font = pygame.font.SysFont("Arial", 24)
+#     screen.fill((230, 230, 230), (0, 0, SCREEN_WIDTH, STATS_HEIGHT))
+#     screen.blit(font.render(f"Turn: {game.turn}", True, (0, 0, 0)), (10, 10))
+#     screen.blit(font.render(f"Coins: {game.coins}", True, (0, 0, 0)), (150, 10))
+#     screen.blit(font.render(f"Score: {game.score}", True, (0, 0, 0)), (300, 10))
+#     screen.blit(font.render(f"1: {game.building_choices[0]}   2: {game.building_choices[1]}", True, (0, 0, 0)), (500, 10))
+
+# def main():
+#     pygame.init()
+#     game = ArcadeGame()
+#     clock = pygame.time.Clock()
+#     font = pygame.font.SysFont("Arial", 20)
+
+#     placing_building = None
+#     demolishing = False
+#     message = ""
+
+#     while True:
+#         game.map.draw()
+#         draw_stats(game.map.screen, game)
+
+#         if message:
+#             msg_surface = font.render(message, True, (255, 0, 0))
+#             game.map.screen.blit(msg_surface, (10, STATS_HEIGHT + 5))
+
+#         for event in pygame.event.get():
+#             if event.type == pygame.QUIT:
+#                 pygame.quit()
+#                 return
+
+#             elif event.type == pygame.KEYDOWN:
+#                 if event.key == pygame.K_1:
+#                     placing_building = game.building_choices[0]
+#                     demolishing = False
+#                     message = f"Placing building: {placing_building}. Click on grid."
+#                 elif event.key == pygame.K_2:
+#                     placing_building = game.building_choices[1]
+#                     demolishing = False
+#                     message = f"Placing building: {placing_building}. Click on grid."
+#                 elif event.key == pygame.K_d:
+#                     demolishing = True
+#                     placing_building = None
+#                     message = "Demolish mode: Click on building to demolish."
+#                 elif event.key == pygame.K_s:
+#                     game.save_game()
+#                     message = "Game saved."
+#                 elif event.key == pygame.K_ESCAPE:
+#                     pygame.quit()
+#                     return
+
+#             elif event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
+#                 pos = event.pos
+#                 if demolishing:
+#                     success, msg = game.demolish_building(pos)
+#                     message = msg
+#                 elif placing_building:
+#                     success, msg = game.place_building(pos, placing_building)
+#                     if success:
+#                         placing_building = None
+#                     message = msg
+
+#         # End game if conditions met
+#         if game.game_over:
+#             message = "Game Over! Final Score: " + str(game.score)
+
+#         pygame.display.flip()
+#         clock.tick(30)
+
+# if __name__ == "__main__":
+#     main()
 
 
