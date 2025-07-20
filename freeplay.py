@@ -49,56 +49,15 @@ class FreePlayGame:
 
     def get_adjacent(self, row, col):
         adj = []
-        for dx, dy in [(-1, 0), (1, 0), (0, -1), (0, 1)]:
+        for dx, dy in [(-1,0),(1,0),(0,-1),(0,1)]:
             r, c = row + dy, col + dx
             adj.append(self.map.grid.get((r, c), "."))
         return adj
 
     def calculate_profit_and_upkeep(self):
         profit, upkeep = 0, 0
-        road_connected = set()
 
-        min_row, max_row, min_col, max_col = self.get_bounds()
-
-        # Horizontal road check
-        for row in range(min_row, max_row + 1):
-            start = None
-            for col in range(min_col, max_col + 2):
-                cell = self.map.grid.get((row, col), ".") if col <= max_col else "."
-                if cell == "*":
-                    if start is None:
-                        start = col
-                else:
-                    if start is not None:
-                        # Mark all road cells from start to col-1 as connected
-                        for rx in range(start, col):
-                            road_connected.add((row, rx))
-                        start = None
-            # Check if road goes till right edge
-            if start is not None:
-                for rx in range(start, max_col + 1):
-                    road_connected.add((row, rx))
-
-        # Vertical road check (fixed)
-        for col in range(min_col, max_col + 1):
-            start = None
-            for row in range(min_row, max_row + 2):
-                cell = self.map.grid.get((row, col), ".") if row <= max_row else "."
-                if cell == "*":
-                    if start is None:
-                        start = row
-                else:
-                    if start is not None:
-                        # Mark all road cells from start to row-1 as connected
-                        for ry in range(start, row):
-                            road_connected.add((ry, col))
-                        start = None
-            # Check if road goes till bottom edge
-            if start is not None:
-                for ry in range(start, max_row + 1):
-                    road_connected.add((ry, col))
-
-        # Calculate profit and upkeep based on buildings and road connections
+        # Check profit and upkeep for each building type
         for (row, col), cell in self.map.grid.items():
             if cell == "R":
                 profit += 1
@@ -111,12 +70,18 @@ class FreePlayGame:
             elif cell == "O":
                 upkeep += 1
             elif cell == "*":
-                if (row, col) not in road_connected:
+                # Road upkeep: cost if no adjacent road segment
+                connected = False
+                for dx, dy in [(-1,0),(1,0),(0,-1),(0,1)]:
+                    adj_cell = self.map.grid.get((row + dy, col + dx))
+                    if adj_cell == "*":
+                        connected = True
+                        break
+                if not connected:
                     upkeep += 1
 
-        # Cluster upkeep logic for residential buildings
+        # Residential cluster upkeep: 1 coin per cluster of connected R's
         visited = set()
-
         def dfs(r, c):
             stack = [(r, c)]
             while stack:
@@ -124,7 +89,7 @@ class FreePlayGame:
                 if (rr, cc) in visited:
                     continue
                 visited.add((rr, cc))
-                for dx, dy in [(-1, 0), (1, 0), (0, -1), (0, 1)]:
+                for dx, dy in [(-1,0),(1,0),(0,-1),(0,1)]:
                     nr, nc = rr + dy, cc + dx
                     if self.map.grid.get((nr, nc)) == "R" and (nr, nc) not in visited:
                         stack.append((nr, nc))
@@ -291,3 +256,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+
