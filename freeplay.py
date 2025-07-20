@@ -73,6 +73,20 @@ class FreePlayGame:
                             for rx in range(start, col):
                                 road_connected.add((row, rx))
                         start = None
+         # Vertical road check
+        for col in range(min_col, max_col + 1):
+            start = None
+            for row in range(min_row, max_row + 2):
+                cell = self.map.grid.get((row, col), ".") if row <= max_row else "."
+                if cell == "*":
+                    if start is None:
+                        start = row
+                    else:
+                        if start is not None:
+                            if row - start > 1:
+                                for ry in range(start, row):
+                                    road_connected.add((ry, col))
+                            start = None
 
         for (row, col), cell in self.map.grid.items():
             if cell == "R":
