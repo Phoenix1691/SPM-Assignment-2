@@ -13,7 +13,8 @@ BUILDING_COLORS = {
 }
 
 class Map:
-    def __init__(self, grid_size, screen_width, stats_display_height):
+    def __init__(game_mode, self, grid_size, screen_width, stats_display_height):
+        self.game_mode = game_mode
         self.grid_size = grid_size
         self.stats_display_height = stats_display_height
         self.tile_size = screen_width // grid_size
@@ -23,7 +24,7 @@ class Map:
         self.first_turn = True
 
     def attempt_place_building(self, pos, building_type):
-        """Smart placement manager for arcade mode with adjacency check after first turn"""
+        """Handles building placement logic based on game mode."""
         x, y = pos
         if y < self.stats_display_height:
             return False  # clicked on stats bar
@@ -38,30 +39,31 @@ class Map:
             return False  # already occupied
 
         if self.first_turn:
-            # First turn can place anywhere
             self.grid[(row, col)] = building_type
-            if self.is_on_border(row, col):
+            if self.game_mode == "freeplay" and self.is_on_border(row, col):
                 self.expand_grid()
             self.first_turn = False
             return True
 
-        # After first turn, must build orthogonally adjacent to existing building
-        adjacent_positions = [
-            (row - 1, col),  # up
-            (row + 1, col),  # down
-            (row, col - 1),  # left
-            (row, col + 1),  # right
-        ]
+        # Mode-specific rules
+        if self.game_mode == "arcade":
+            if not self.has_adjacent_building(row, col):
+                print("Arcade mode: Must place next to an existing building.")
+                return False
 
-        for r, c in adjacent_positions:
-            if (r, c) in self.grid:
-                # Adjacent building found, allow placement
-                self.grid[(row, col)] = building_type
-                if self.is_on_border(row, col):
-                    self.expand_grid()
+        self.grid[(row, col)] = building_type
+
+        if self.game_mode == "freeplay" and self.is_on_border(row, col):
+            self.expand_grid()
+
+        return True
+
+    def has_adjacent_building(self, row, col):
+        """Check if there is a building adjacent to (row, col)."""
+        for dr, dc in [(-1, 0), (1, 0), (0, -1), (0, 1)]:
+            adj = (row + dr, col + dc)
+            if adj in self.grid:
                 return True
-
-        print("Not allowed: must build adjacent to existing buildings after first turn.")
         return False
 
 
