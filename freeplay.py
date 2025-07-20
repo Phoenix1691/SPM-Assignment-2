@@ -8,7 +8,6 @@ Press D: Demolish
 Press S: Save game
 """
 
-from more_itertools import adjacent
 import pygame
 import os
 import pickle
@@ -57,7 +56,7 @@ class FreePlayGame:
     def calculate_profit_and_upkeep(self):
         profit, upkeep = 0, 0
 
-        # Profit and upkeep for buildings except roads
+        # Check profit and upkeep for each building type
         for (row, col), cell in self.map.grid.items():
             if cell == "R":
                 profit += 1
@@ -69,49 +68,34 @@ class FreePlayGame:
                 upkeep += 2
             elif cell == "O":
                 upkeep += 1
-
-        # Find connected clusters of roads ('*')
-        visited_roads = set()
-
-        def dfs_road(r, c):
-            stack = [(r, c)]
-            cluster = []
-            while stack:
-                rr, cc = stack.pop()
-                if (rr, cc) in visited_roads:
-                    continue
-                visited_roads.add((rr, cc))
-                cluster.append((rr, cc))
+            elif cell == "*":
+                # Road upkeep: cost if no adjacent road segment
+                connected = False
                 for dx, dy in [(-1,0),(1,0),(0,-1),(0,1)]:
-                    nr, nc = rr + dy, cc + dx
-                    if self.map.grid.get((nr, nc)) == "*" and (nr, nc) not in visited_roads:
-                        stack.append((nr, nc))
-            return cluster
-
-        # Only add upkeep if road cluster size is 1 (isolated)
-        for (row, col), cell in self.map.grid.items():
-            if cell == "*" and (row, col) not in visited_roads:
-                cluster = dfs_road(row, col)
-                if len(cluster) == 1:
+                    adj_cell = self.map.grid.get((row + dy, col + dx))
+                    if adj_cell == "*":
+                        connected = True
+                        break
+                if not connected:
                     upkeep += 1
 
-        # Residential cluster upkeep
-        visited_res = set()
-        def dfs_res(r, c):
+        # Residential cluster upkeep: 1 coin per cluster of connected R's
+        visited = set()
+        def dfs(r, c):
             stack = [(r, c)]
             while stack:
                 rr, cc = stack.pop()
-                if (rr, cc) in visited_res:
+                if (rr, cc) in visited:
                     continue
-                visited_res.add((rr, cc))
+                visited.add((rr, cc))
                 for dx, dy in [(-1,0),(1,0),(0,-1),(0,1)]:
                     nr, nc = rr + dy, cc + dx
-                    if self.map.grid.get((nr, nc)) == "R" and (nr, nc) not in visited_res:
+                    if self.map.grid.get((nr, nc)) == "R" and (nr, nc) not in visited:
                         stack.append((nr, nc))
 
         for (row, col), cell in self.map.grid.items():
-            if cell == "R" and (row, col) not in visited_res:
-                dfs_res(row, col)
+            if cell == "R" and (row, col) not in visited:
+                dfs(row, col)
                 upkeep += 1
 
         return profit, upkeep
@@ -128,8 +112,7 @@ class FreePlayGame:
                     if "I" in adj:
                         score += 1
                     else:
-                        score += adjacent.count("R") + adjacent.count("C")
-                        score += 2 * adjacent.count("O")
+                        # Fixed here: replaced undefined 'adjacent' with 'adj'
                         score += adj.count("R") + adj.count("C") + 2 * adj.count("O")
                 elif cell == "I":
                     score += 0
@@ -147,12 +130,15 @@ class FreePlayGame:
             return False, "Cannot place building in demolish mode."
 
         x, y = pos
+        # Calculate grid coords based on current tile size and stats height
         row = (y - STATS_HEIGHT) // self.map.tile_size
         col = x // self.map.tile_size
 
+        # Allow placement anywhere — no adjacency check
         if (row, col) not in self.map.grid:
             self.map.grid[(row, col)] = self.selected_building
 
+            # If placed building on border, expand grid
             if self.map.is_on_border(row, col):
                 self.map.expand_grid()
 
@@ -195,6 +181,8 @@ class FreePlayGame:
         }
         with open(filename, 'wb') as f:
             pickle.dump(data, f)
+
+
 
 def draw_stats(screen, game):
     font = pygame.font.SysFont("Arial", 20)
