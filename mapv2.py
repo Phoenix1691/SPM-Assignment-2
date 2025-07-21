@@ -1,4 +1,5 @@
 import pygame
+import os
 #mapv2.py
 # --- Colors ---
 WHITE = (255, 255, 255)
@@ -11,6 +12,13 @@ BUILDING_COLORS = {
     "O": (180, 255, 180),
     "*": (150, 150, 150)
 }
+import tkinter
+
+root = tkinter.Tk()
+width = root.winfo_screenwidth()
+height = root.winfo_screenheight()
+root.destroy()  # Close the Tkinter window
+print(f"Screen resolution: {width}x{height}")
 
 class Map:
     def __init__(self, game_mode, grid_size, screen_width, stats_display_height):
@@ -72,21 +80,13 @@ class Map:
         screen_height = screen_width + self.stats_display_height
         self.screen = pygame.display.set_mode((screen_width, screen_height))
         pygame.display.set_caption("Ngee Ann City")
+        pygame.display.init()
+        display_info = pygame.display.Info()
+        screen_w = display_info.current_w
+        screen_h = display_info.current_h
+        print("Screen initialized:", screen_w, screen_h)
+        print("Screen initialized:", screen_width, screen_height)
 
-    # def draw(self):
-    #     self.screen.fill(WHITE)
-    #     for row in range(self.grid_size):
-    #         for col in range(self.grid_size):
-    #             x = col * self.tile_size
-    #             y = row * self.tile_size + self.stats_display_height
-    #             rect = pygame.Rect(x, y, self.tile_size, self.tile_size)
-
-    #             # Determine cell color
-    #             building = self.grid.get((row, col), "")
-    #             color = BUILDING_COLORS.get(building, GRAY if (row + col) % 2 == 0 else WHITE)
-
-    #             pygame.draw.rect(self.screen, color, rect)
-    #             pygame.draw.rect(self.screen, BLACK, rect, 1)
 
     def draw(self):
         self.screen.fill((255, 255, 255))  # Clear the screen
@@ -199,9 +199,10 @@ class Map:
 
         print(f"Grid expanded to: {self.grid_size} x {self.grid_size} (Tile: {self.tile_size}px)")
 
-"""
+#TESTING CODE
+
 # Constants
-SCREEN_WIDTH = 800
+SCREEN_WIDTH = 600
 STATS_HEIGHT = 50
 INITIAL_GRID_SIZE = 10
 
@@ -211,7 +212,7 @@ selected_building = "R"
 pygame.init()
 pygame.font.init()
 
-city_map = Map(INITIAL_GRID_SIZE, SCREEN_WIDTH, STATS_HEIGHT)
+city_map = Map("freeplay", INITIAL_GRID_SIZE, SCREEN_WIDTH, STATS_HEIGHT)
 city_map.initialize_screen()
 
 # Main Loop
@@ -229,7 +230,7 @@ while running:
             city_map.attempt_place_building(pos, selected_building)
 
 pygame.quit()
-"""
+
 
 """
 dont delete need this for reference
