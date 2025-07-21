@@ -28,10 +28,16 @@ KEY_TO_BUILDING = {
     pygame.K_4: "O",
     pygame.K_5: "*"
 }
+# Constants for buttons
+BUILDING_OPTIONS = ["R", "I", "C", "O", "*", "D"]  # D = Demolish
+BUTTON_WIDTH = 80
+BUTTON_HEIGHT = 40
+BUTTON_MARGIN = 10
 
 class FreePlayGame:
     def __init__(self):
-        self.map = Map(grid_size=5, screen_width=SCREEN_WIDTH, stats_display_height=STATS_HEIGHT)
+        # self.map = Map(grid_size=5, screen_width=SCREEN_WIDTH, stats_display_height=STATS_HEIGHT)
+        self.map = Map("freeplay", grid_size=5, screen_width=SCREEN_WIDTH, stats_display_height=STATS_HEIGHT)
         self.map.initialize_screen()
         self.turn = 0
         self.loss_turns = 0
@@ -184,16 +190,53 @@ class FreePlayGame:
             pickle.dump(data, f)
 
 
-
 def draw_stats(screen, game):
     font = pygame.font.SysFont("Arial", 20)
     pygame.draw.rect(screen, WHITE, (0, 0, SCREEN_WIDTH, STATS_HEIGHT))
+    
     profit, upkeep = game.calculate_profit_and_upkeep()
     net = profit - upkeep
     mode = "Demolish" if game.demolish_mode else game.selected_building
     stats = f"Turn: {game.turn} | Score: {game.score} | Profit: {profit} | Upkeep: {upkeep} | Net: {net} | Mode: {mode}"
+    
     label = font.render(stats, True, BLACK)
-    screen.blit(label, (10, 10))
+    screen.blit(label, (10, BUTTON_HEIGHT + 10))  # Adjusted Y-position to avoid overlapping buttons
+
+def draw_building_buttons(screen, selected_building, demolish_mode):
+    font = pygame.font.SysFont("Arial", 24)
+    x_offset = BUTTON_MARGIN
+    buttons = {}
+
+    for option in BUILDING_OPTIONS:
+        color = (200, 200, 200)
+        if option == selected_building:
+            color = (100, 255, 100)
+        if option == "D" and demolish_mode:
+            color = (255, 100, 100)
+
+        rect = pygame.Rect(x_offset, 5, BUTTON_WIDTH, BUTTON_HEIGHT)
+        pygame.draw.rect(screen, color, rect)
+        pygame.draw.rect(screen, (0, 0, 0), rect, 2)
+
+        label = font.render(option, True, (0, 0, 0))
+        label_rect = label.get_rect(center=rect.center)
+        screen.blit(label, label_rect)
+
+        buttons[option] = rect
+        x_offset += BUTTON_WIDTH + BUTTON_MARGIN
+
+    return buttons
+
+def handle_button_click(pos, buttons, game):
+    for option, rect in buttons.items():
+        if rect.collidepoint(pos):
+            if option == "D":
+                game.demolish_mode = not game.demolish_mode
+            else:
+                game.selected_building = option
+                game.demolish_mode = False
+            return True
+    return False
 
 def main():
     pygame.init()
@@ -204,30 +247,35 @@ def main():
     while True:
         game.map.draw()
         draw_stats(game.map.screen, game)
+        buttons = draw_building_buttons(game.map.screen, game.selected_building, game.demolish_mode)
         if message:
             font = pygame.font.SysFont("Arial", 20)
+            # msg_surface = font.render(message, True, (255, 0, 0))
+            # game.map.screen.blit(msg_surface, (10, STATS_HEIGHT + 5))
             msg_surface = font.render(message, True, (255, 0, 0))
-            game.map.screen.blit(msg_surface, (10, STATS_HEIGHT + 5))
+            game.map.screen.blit(msg_surface, (10, STATS_HEIGHT + BUTTON_HEIGHT + 15))  # Push it down
 
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 pygame.quit()
                 return
 
-            elif event.type == pygame.KEYDOWN:
-                if event.key in KEY_TO_BUILDING:
-                    game.selected_building = KEY_TO_BUILDING[event.key]
-                    game.demolish_mode = False
-                    message = f"Selected building: {game.selected_building}"
-                elif event.key == pygame.K_d:
-                    game.demolish_mode = not game.demolish_mode
-                    message = "Demolish mode ON" if game.demolish_mode else "Demolish mode OFF"
-                elif event.key == pygame.K_s:
-                    game.save_game()
-                    message = "Game saved."
-                elif event.key == pygame.K_ESCAPE:
-                    pygame.quit()
-                    return
+            elif event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
+                pos = event.pos
+                if pos[1] < STATS_HEIGHT:
+                    if handle_button_click(pos, buttons, game):
+                        message = f"Mode: {'Demolish' if game.demolish_mode else game.selected_building}"
+                    continue
+                if game.demolish_mode:
+                    success, msg = game.demolish_building(pos)
+                    if success:
+                        game.next_turn()
+                    message = msg
+                else:
+                    success, msg = game.place_building(pos)
+                    if success:
+                        game.next_turn()
+                    message = msg
 
             elif event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
                 pos = event.pos
