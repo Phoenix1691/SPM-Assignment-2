@@ -15,6 +15,7 @@ import pickle
 from mapv2 import Map  # Your mapv2.py with Map class
 
 SCREEN_WIDTH = 800
+SCREEN_HEIGHT = 650
 STATS_HEIGHT = 50
 
 WHITE = (255, 255, 255)
