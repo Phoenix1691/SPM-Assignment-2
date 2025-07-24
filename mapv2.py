@@ -22,7 +22,7 @@ class Map:
         self.expansion_count = 0
         self.first_turn = True
         self.tile_size = 0  # To be set during screen init
-        self.fixed_grid_pixel_size = 0
+        self.fixed_grid_pixel_size = 800
         self.top_margin = 0
         self.left_margin = 0
 
@@ -121,26 +121,38 @@ class Map:
         return row == 0 or col == 0 or row == self.grid_size - 1 or col == self.grid_size - 1
 
     def expand_grid(self):
-        if self.grid_size >= 25:
-            print("Maximum grid size reached. Cannot expand further.")
-            return
-
         expansion = 5
+        self.expansion_count += 1
+
+        # Shift existing buildings
         new_grid = {}
         for (row, col), value in self.grid.items():
             new_grid[(row + expansion, col + expansion)] = value
-
         self.grid = new_grid
-        self.grid_size += expansion * 2
-        self.expansion_count += 1
-        self.tile_size = self.fixed_grid_pixel_size // self.grid_size
+
+        self.grid_size += expansion * 2  # Expand grid logically
+
+        # Handle tile size logic
+        if self.expansion_count % 3 == 1 and self.expansion_count > 1:
+            # Every 3rd expansion (25x25, 35x35, etc.) => Increase tile size slightly
+            self.tile_size += 4  # Adjust as needed
+            self.fixed_grid_pixel_size = self.tile_size * self.grid_size
+            print(f"[Cycle Reset] Increased tile size to {self.tile_size}")
+        else:
+            # Other expansions => Shrink tile size
+            self.tile_size = max(16, self.fixed_grid_pixel_size // self.grid_size)
+            print(f"[Shrink] Adjusted tile size to {self.tile_size}")
+
+        # Resize screen if needed
+        screen_width, screen_height = self.screen.get_size()
+        required_width = self.grid_size * self.tile_size + 100
+        required_height = self.grid_size * self.tile_size + 100
+
+        if screen_width < required_width or screen_height < required_height:
+            self.screen = pygame.display.set_mode((required_width, required_height), pygame.RESIZABLE)
+
         self.update_margins()
-
-        screen_width, _ = self.screen.get_size()
-        screen_height = self.grid_size * self.tile_size + self.top_margin * 2
-        self.screen = pygame.display.set_mode((screen_width, screen_height), pygame.RESIZABLE)
-
-        print(f"Grid expanded to: {self.grid_size}x{self.grid_size} (Tile: {self.tile_size}px)")
+        print(f"Expanded to {self.grid_size} x {self.grid_size} | Tile: {self.tile_size}px")
 
 # --- Main Execution ---
 pygame.init()
