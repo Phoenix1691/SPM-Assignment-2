@@ -33,11 +33,13 @@ BUTTON_WIDTH = 80
 BUTTON_HEIGHT = 40
 BUTTON_MARGIN = 10
 BUTTON_Y = 5
+UI_HEIGHT = STATS_HEIGHT + BUTTON_HEIGHT + 20  # Add padding
 
 class FreePlayGame:
-    def __init__(self):
+    def __init__(self, screen):
         # self.map = Map(grid_size=5, screen_width=SCREEN_WIDTH, stats_display_height=STATS_HEIGHT)
-        self.map = Map("freeplay", grid_size=5, screen_width=SCREEN_WIDTH, stats_display_height=STATS_HEIGHT)
+        # self.map = Map("freeplay", grid_size=5, screen_width=SCREEN_WIDTH, stats_display_height=STATS_HEIGHT)
+        self.map = Map("freeplay", grid_size=5, screen=screen)
         self.map.initialize_screen()
         self.turn = 0
         self.loss_turns = 0
@@ -45,6 +47,9 @@ class FreePlayGame:
         self.score = 0
         self.selected_building = "R"
         self.demolish_mode = False
+        self.message = ""
+        self.message_timer = 0
+
 
     def get_bounds(self):
         if not self.map.grid:
@@ -251,10 +256,12 @@ def handle_button_click(pos, buttons, game):
 
 def main():
     pygame.init()
-    screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
+    # screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
     pygame.display.set_caption("Freeplay Game")
     clock = pygame.time.Clock()
-    game = FreePlayGame()
+    # game = FreePlayGame()
+    screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
+    game = FreePlayGame(screen)
 
     while True:
         screen.fill(WHITE)
@@ -278,16 +285,16 @@ def main():
                 pygame.quit()
                 return
 
-            elif event.type == pygame.KEYDOWN:
-                if event.key in KEY_TO_BUILDING:
-                    game.selected_building = KEY_TO_BUILDING[event.key]
-                    game.demolish_mode = False
-                    game.show_message(f"Selected: {game.selected_building}")
+            # elif event.type == pygame.KEYDOWN:
+            #     if event.key in KEY_TO_BUILDING:
+            #         game.selected_building = KEY_TO_BUILDING[event.key]
+            #         game.demolish_mode = False
+            #         game.show_message(f"Selected: {game.selected_building}")
 
             elif event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
                 pos = event.pos
                 # Check if click on button area (top area)
-                if pos[1] < STATS_HEIGHT + BUTTON_HEIGHT + 10:
+                if pos[1] < UI_HEIGHT:
                     if handle_button_click(pos, buttons, game):
                         continue
                 # Handle building placement/demolition

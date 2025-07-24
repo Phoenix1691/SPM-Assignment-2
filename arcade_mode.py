@@ -35,7 +35,8 @@ def get_building_class(type_identifier):
 class ArcadeGame:
     def __init__(self):
         # self.map = Map(GRID_SIZE, SCREEN_WIDTH, STATS_HEIGHT)
-        self.map = Map("arcade", GRID_SIZE, SCREEN_WIDTH, STATS_HEIGHT)
+        # self.map = Map("arcade", GRID_SIZE, SCREEN_WIDTH, STATS_HEIGHT)
+        self.map = Map("arcade", GRID_SIZE)
         self.map.initialize_screen()
         self.turn = 0
         self.coins = 16
@@ -52,6 +53,7 @@ class ArcadeGame:
             return False, "No coins left."
         success = self.map.attempt_place_building(pos, building)
         if success:
+
             self.coins -= 1
             self.turn += 1
 
@@ -73,8 +75,9 @@ class ArcadeGame:
 
     def demolish_building(self, pos):
         x, y = pos
-        row = (y - STATS_HEIGHT) // self.map.tile_size
-        col = x // self.map.tile_size
+        row = (y - self.map.top_margin) // self.map.tile_size
+        col = (x - self.map.left_margin) // self.map.tile_size
+
         if (row, col) in self.map.grid:
             if self.coins < 1:
                 return False, "Not enough coins to demolish."

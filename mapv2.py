@@ -12,9 +12,11 @@ BUILDING_COLORS = {
     "O": (180, 255, 180),
     "*": (150, 150, 150)
 }
+UI_HEIGHT = 90  # or STATS_HEIGHT + BUTTON_HEIGHT + margin
 
 class Map:
     def __init__(self, game_mode, grid_size):
+    # def __init__(self, game_mode, grid_size, screen):
         self.game_mode = game_mode
         self.grid_size = grid_size
         self.grid = {}
@@ -29,6 +31,7 @@ class Map:
         self.minimap_surface = None
         self.minimap_dirty = True
         self.stats_bar_height = 100
+        # self.screen = screen
 
 
 
@@ -59,7 +62,7 @@ class Map:
 
     def update_margins(self):
         screen_w, screen_h = self.screen.get_size()
-        available_h = screen_h - self.stats_bar_height
+        available_h = screen_h - UI_HEIGHT
         self.left_margin = (screen_w - self.grid_size * self.tile_size) // 2
         self.top_margin = self.stats_bar_height + (available_h - self.grid_size * self.tile_size) // 2
 
@@ -163,7 +166,7 @@ class Map:
 
 
     def draw(self):
-        self.screen.fill(WHITE)
+        # self.screen.fill(WHITE)
         self.update_margins()
         font = pygame.font.SysFont("Arial", self.tile_size // 2)
 
@@ -191,7 +194,6 @@ class Map:
         self.dirty_tiles.clear()
         self.draw_minimap()
         self.draw_stats_bar()
-
 
 
     def is_on_border(self, row, col):
@@ -229,35 +231,35 @@ class Map:
         self.minimap_dirty = True
         print(f"Expanded to {self.grid_size} x {self.grid_size} | Tile: {self.tile_size}px")
 
-# --- Main Execution ---
-pygame.init()
-pygame.font.init()
+# # --- Main Execution ---
+# pygame.init()
+# pygame.font.init()
 
-INITIAL_GRID_SIZE = 5
-selected_building = "R"
-city_map = Map("freeplay", INITIAL_GRID_SIZE)
-city_map.initialize_screen()
+# INITIAL_GRID_SIZE = 5
+# selected_building = "R"
+# city_map = Map("freeplay", INITIAL_GRID_SIZE)
+# city_map.initialize_screen()
 
-running = True
-while running:
-    city_map.draw()
-    pygame.display.flip()
+# running = True
+# while running:
+#     city_map.draw()
+#     pygame.display.flip()
 
-    for event in pygame.event.get():
-        if event.type == pygame.QUIT:
-            running = False
+#     for event in pygame.event.get():
+#         if event.type == pygame.QUIT:
+#             running = False
 
-        elif event.type == pygame.VIDEORESIZE:
-            screen_w, screen_h = event.w, event.h
-            city_map.screen = pygame.display.set_mode((screen_w, screen_h), pygame.RESIZABLE)
-            usable_h = screen_h - city_map.stats_bar_height
-            city_map.tile_size = max(16, min(64, screen_w // city_map.grid_size, usable_h // city_map.grid_size))
-            city_map.fixed_grid_pixel_size = city_map.tile_size * city_map.grid_size
-            city_map.update_margins()
+#         elif event.type == pygame.VIDEORESIZE:
+#             screen_w, screen_h = event.w, event.h
+#             city_map.screen = pygame.display.set_mode((screen_w, screen_h), pygame.RESIZABLE)
+#             usable_h = screen_h - city_map.stats_bar_height
+#             city_map.tile_size = max(16, min(64, screen_w // city_map.grid_size, usable_h // city_map.grid_size))
+#             city_map.fixed_grid_pixel_size = city_map.tile_size * city_map.grid_size
+#             city_map.update_margins()
 
 
-        elif event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
-            pos = pygame.mouse.get_pos()
-            city_map.attempt_place_building(pos, selected_building)
+#         elif event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
+#             pos = pygame.mouse.get_pos()
+#             city_map.attempt_place_building(pos, selected_building)
 
 pygame.quit()

@@ -31,3 +31,4 @@ class road(Building):
         clusters = []
         road_segments = []
         visited = set()
+        return profit, upkeep
