@@ -193,16 +193,6 @@ class FreePlayGame:
         self.message = msg
         self.message_timer = duration
 
-    def place_building(self, pos):
-        # Implementation for placing a building on the grid based on pos
-        # Returns (success: bool, message: str)
-        pass
-
-    def demolish_building(self, pos):
-        # Implementation for demolishing a building
-        # Returns (success: bool, message: str)
-        pass
-
 
 
 def draw_stats(screen, game):
