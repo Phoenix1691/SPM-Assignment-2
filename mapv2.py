@@ -172,6 +172,7 @@ class Map:
         self.dirty_tiles.clear()
         self.draw_minimap()
 
+
     def is_on_border(self, row, col):
         return row == 0 or col == 0 or row == self.grid_size - 1 or col == self.grid_size - 1
 
