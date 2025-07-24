@@ -93,6 +93,47 @@ class Map:
                 return True
         return False
 
+    def draw_minimap(self):
+        if not self.screen:
+            return  # safety check
+
+        minimap_tile = 10  # size of each tile in minimap
+        margin = 10       # padding from screen edge
+
+        minimap_width = self.grid_size * minimap_tile
+        minimap_height = self.grid_size * minimap_tile
+
+        screen_w, screen_h = self.screen.get_size()
+        minimap_x = screen_w - minimap_width - margin
+        minimap_y = screen_h - minimap_height - margin
+
+        # Optional label
+        font = pygame.font.SysFont("Arial", 14)
+        label = font.render("Mini-map", True, (0, 0, 0))
+        self.screen.blit(label, (minimap_x, minimap_y - 20))
+
+        for row in range(self.grid_size):
+            for col in range(self.grid_size):
+                color = (220, 220, 220)  # default empty tile
+                if (row, col) in self.grid:
+                    building = self.grid[(row, col)]
+                    color = BUILDING_COLORS.get(building, (128, 128, 128))
+
+                x = minimap_x + col * minimap_tile
+                y = minimap_y + row * minimap_tile
+                rect = pygame.Rect(x, y, minimap_tile, minimap_tile)
+                pygame.draw.rect(self.screen, color, rect)
+
+        # Optional border
+        pygame.draw.rect(
+            self.screen,
+            (0, 0, 0),
+            (minimap_x, minimap_y, minimap_width, minimap_height),
+            2
+        )
+
+
+
     def draw(self):
         self.screen.fill(WHITE)
         self.update_margins()
@@ -115,6 +156,7 @@ class Map:
                     color = (240, 240, 240) if (row + col) % 2 == 0 else (250, 250, 250)
                     pygame.draw.rect(self.screen, color, rect)
 
+                self.draw_minimap()
                 pygame.draw.rect(self.screen, BLACK, rect, 1)
 
     def is_on_border(self, row, col):
