@@ -135,7 +135,7 @@ class Map:
 
 
     def draw(self):
-        self.screen.fill(WHITE)
+        # ✅ Removed: self.screen.fill(WHITE)
         self.update_margins()
         font = pygame.font.SysFont("Arial", self.tile_size // 2)
 
@@ -156,8 +156,10 @@ class Map:
                     color = (240, 240, 240) if (row + col) % 2 == 0 else (250, 250, 250)
                     pygame.draw.rect(self.screen, color, rect)
 
-                self.draw_minimap()
                 pygame.draw.rect(self.screen, BLACK, rect, 1)
+
+        # ✅ Moved outside the loop
+        self.draw_minimap()
 
     def is_on_border(self, row, col):
         return row == 0 or col == 0 or row == self.grid_size - 1 or col == self.grid_size - 1
