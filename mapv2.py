@@ -28,6 +28,8 @@ class Map:
         self.dirty_tiles = set()
         self.minimap_surface = None
         self.minimap_dirty = True
+        self.stats_bar_height = 100
+
 
 
     def initialize_screen(self):
@@ -39,22 +41,29 @@ class Map:
         screen_h = root.winfo_screenheight()
         root.destroy()
 
-        self.screen = pygame.display.set_mode((screen_w, screen_h), pygame.RESIZABLE)
-        pygame.display.set_caption("Ngee Ann City")
-
+        # Adjust tile size to fit screen minus stats bar
         max_tile_size = 64
-        self.tile_size = max(16, min(max_tile_size, screen_w // self.grid_size, screen_h // self.grid_size))
+        usable_h = screen_h - self.stats_bar_height
+        self.tile_size = max(16, min(max_tile_size, screen_w // self.grid_size, usable_h // self.grid_size))
         self.fixed_grid_pixel_size = self.tile_size * self.grid_size
+
+        # Create fullscreen window
+        self.screen = pygame.display.set_mode((screen_w, screen_h), pygame.FULLSCREEN)
+        pygame.display.set_caption("Ngee Ann City")
 
         self.update_margins()
 
-        print(f"Windowed fullscreen: {screen_w}x{screen_h}")
+        print(f"Fullscreen: {screen_w}x{screen_h}")
         print(f"Tile size: {self.tile_size}")
+
 
     def update_margins(self):
         screen_w, screen_h = self.screen.get_size()
+        available_h = screen_h - self.stats_bar_height
         self.left_margin = (screen_w - self.grid_size * self.tile_size) // 2
-        self.top_margin = (screen_h - self.grid_size * self.tile_size) // 2
+        self.top_margin = self.stats_bar_height + (available_h - self.grid_size * self.tile_size) // 2
+
+
 
     def attempt_place_building(self, pos, building_type):
         x, y = pos
@@ -140,6 +149,16 @@ class Map:
         # Blit cached surface
         self.screen.blit(self.minimap_surface, (minimap_x, minimap_y))
 
+    def draw_stats_bar(self):
+        screen_w, _ = self.screen.get_size()
+        bar_top = 0
+
+        bar_rect = pygame.Rect(0, bar_top, screen_w, self.stats_bar_height)
+        pygame.draw.rect(self.screen, GRAY, bar_rect)
+        font = pygame.font.SysFont("Arial", 20)
+        text = f"Grid: {self.grid_size}x{self.grid_size} | Tile: {self.tile_size}px | Buildings: {len(self.grid)}"
+        label = font.render(text, True, BLACK)
+        self.screen.blit(label, (10, bar_top + 10))
 
 
 
@@ -171,6 +190,8 @@ class Map:
 
         self.dirty_tiles.clear()
         self.draw_minimap()
+        self.draw_stats_bar()
+
 
 
     def is_on_border(self, row, col):
@@ -229,9 +250,11 @@ while running:
         elif event.type == pygame.VIDEORESIZE:
             screen_w, screen_h = event.w, event.h
             city_map.screen = pygame.display.set_mode((screen_w, screen_h), pygame.RESIZABLE)
-            city_map.tile_size = max(16, min(64, screen_w // city_map.grid_size, screen_h // city_map.grid_size))
+            usable_h = screen_h - city_map.stats_bar_height
+            city_map.tile_size = max(16, min(64, screen_w // city_map.grid_size, usable_h // city_map.grid_size))
             city_map.fixed_grid_pixel_size = city_map.tile_size * city_map.grid_size
             city_map.update_margins()
+
 
         elif event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
             pos = pygame.mouse.get_pos()
