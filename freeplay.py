@@ -259,12 +259,12 @@ def main():
     while True:
         screen.fill(WHITE)
 
-        # Draw game map
-        game.map.draw()
-
         # Draw stats and buttons
         draw_stats(screen, game)
         buttons = draw_building_buttons(screen, game.selected_building, game.demolish_mode)
+
+        # Draw game map
+        game.map.draw()
 
         # Show message if any
         if game.message_timer > 0:
