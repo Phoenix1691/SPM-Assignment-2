@@ -200,7 +200,7 @@ class Map:
 pygame.init()
 pygame.font.init()
 
-INITIAL_GRID_SIZE = 10
+INITIAL_GRID_SIZE = 5
 selected_building = "R"
 city_map = Map("freeplay", INITIAL_GRID_SIZE)
 city_map.initialize_screen()
