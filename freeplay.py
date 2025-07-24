@@ -21,16 +21,10 @@ WHITE = (255, 255, 255)
 GRAY = (200, 200, 200)
 BLACK = (0, 0, 0)
 
-KEY_TO_BUILDING = {
-    pygame.K_1: "R",
-    pygame.K_2: "I",
-    pygame.K_3: "C",
-    pygame.K_4: "O",
-    pygame.K_5: "*"
-}
+
 # Constants for buttons
 BUILDING_OPTIONS = ["R", "I", "C", "O", "*", "D"]  # D = Demolish
-BUTTON_WIDTH = 80
+BUTTON_WIDTH = 70
 BUTTON_HEIGHT = 40
 BUTTON_MARGIN = 10
 
@@ -180,14 +174,23 @@ class FreePlayGame:
         return self.loss_turns >= self.max_loss_turns
     
     def save_game(self, filename="freeplay_save.pkl"):
-        data = {
-            'grid': self.map.grid,
-            'turn': self.turn,
-            'loss_turns': self.loss_turns,
-            'score': self.score
-        }
-        with open(filename, 'wb') as f:
-            pickle.dump(data, f)
+        try:
+            data = {
+                'grid': self.map.grid,
+                'turn': self.turn,
+                'loss_turns': self.loss_turns,
+                'score': self.score
+            }
+            with open(filename, 'wb') as f:
+                pickle.dump(data, f)
+            self.show_message("Game saved successfully!")
+            return True
+        except Exception as e:
+            self.show_message(f"Save failed: {str(e)}")
+            return False
+    def show_message(self, msg, duration=120):
+        self.message = msg
+        self.message_timer = duration
 
 
 def draw_stats(screen, game):
@@ -208,17 +211,23 @@ def draw_building_buttons(screen, selected_building, demolish_mode):
     buttons = {}
 
     for option in BUILDING_OPTIONS:
-        color = (200, 200, 200)
+        # Set button colors
         if option == selected_building:
-            color = (100, 255, 100)
-        if option == "D" and demolish_mode:
-            color = (255, 100, 100)
+            color = GREEN
+        elif option == "D" and demolish_mode:
+            color = RED
+        elif option == "Save":
+            color = BLUE
+        else:
+            color = GRAY
 
-        rect = pygame.Rect(x_offset, 5, BUTTON_WIDTH, BUTTON_HEIGHT)
+        rect = pygame.Rect(x_offset, BUTTON_Y, BUTTON_WIDTH, BUTTON_HEIGHT)
         pygame.draw.rect(screen, color, rect)
-        pygame.draw.rect(screen, (0, 0, 0), rect, 2)
+        pygame.draw.rect(screen, BLACK, rect, 2)
 
-        label = font.render(option, True, (0, 0, 0))
+        # Button label
+        label_text = option if option != "Save" else "💾"  # Use emoji for save
+        label = font.render(label_text, True, BLACK)
         label_rect = label.get_rect(center=rect.center)
         screen.blit(label, label_rect)
 
@@ -232,9 +241,13 @@ def handle_button_click(pos, buttons, game):
         if rect.collidepoint(pos):
             if option == "D":
                 game.demolish_mode = not game.demolish_mode
+                game.show_message("Demolish mode " + ("ON" if game.demolish_mode else "OFF"))
+            elif option == "Save":
+                game.save_game()
             else:
                 game.selected_building = option
                 game.demolish_mode = False
+                game.show_message(f"Selected: {option}")
             return True
     return False
 
@@ -242,18 +255,19 @@ def main():
     pygame.init()
     game = FreePlayGame()
     clock = pygame.time.Clock()
-    message = ""
 
     while True:
+        # Game logic
         game.map.draw()
         draw_stats(game.map.screen, game)
         buttons = draw_building_buttons(game.map.screen, game.selected_building, game.demolish_mode)
-        if message:
+        
+        # Display temporary message
+        if game.message_timer > 0:
             font = pygame.font.SysFont("Arial", 20)
-            # msg_surface = font.render(message, True, (255, 0, 0))
-            # game.map.screen.blit(msg_surface, (10, STATS_HEIGHT + 5))
-            msg_surface = font.render(message, True, (255, 0, 0))
-            game.map.screen.blit(msg_surface, (10, STATS_HEIGHT + BUTTON_HEIGHT + 15))  # Push it down
+            msg_surface = font.render(game.message, True, RED)
+            game.map.screen.blit(msg_surface, (10, STATS_HEIGHT + BUTTON_HEIGHT + 15))
+            game.message_timer -= 1
 
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
@@ -262,39 +276,24 @@ def main():
 
             elif event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
                 pos = event.pos
+                # Check if clicking on buttons
                 if pos[1] < STATS_HEIGHT:
-                    if handle_button_click(pos, buttons, game):
-                        message = f"Mode: {'Demolish' if game.demolish_mode else game.selected_building}"
+                    handle_button_click(pos, buttons, game)
                     continue
+                
+                # Handle building placement/demolition
                 if game.demolish_mode:
                     success, msg = game.demolish_building(pos)
-                    if success:
-                        game.next_turn()
-                    message = msg
                 else:
                     success, msg = game.place_building(pos)
-                    if success:
-                        game.next_turn()
-                    message = msg
-
-            elif event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
-                pos = event.pos
-                if pos[1] < STATS_HEIGHT:
-                    continue
-                if game.demolish_mode:
-                    success, msg = game.demolish_building(pos)
-                    if success:
-                        game.next_turn()
-                    message = msg
-                else:
-                    success, msg = game.place_building(pos)
-                    if success:
-                        game.next_turn()
-                    message = msg
+                
+                if success:
+                    game.next_turn()
+                game.show_message(msg)
 
         if game.is_game_over():
             font = pygame.font.SysFont("Arial", 40)
-            label = font.render("Game Over: 20 turns of loss", True, (200, 0, 0))
+            label = font.render("Game Over: 20 turns of loss", True, RED)
             game.map.screen.blit(label, (100, SCREEN_WIDTH // 2))
             pygame.display.flip()
             pygame.time.wait(3000)
