@@ -25,6 +25,10 @@ class Map:
         self.fixed_grid_pixel_size = 800
         self.top_margin = 0
         self.left_margin = 0
+        self.dirty_tiles = set()
+        self.minimap_surface = None
+        self.minimap_dirty = True
+
 
     def initialize_screen(self):
         pygame.display.init()
@@ -70,6 +74,8 @@ class Map:
 
         if self.first_turn:
             self.grid[(row, col)] = building_type
+            self.dirty_tiles.add((row, col))
+            self.minimap_dirty = True
             if self.game_mode == "freeplay" and self.is_on_border(row, col):
                 self.expand_grid()
             self.first_turn = False
@@ -81,11 +87,14 @@ class Map:
                 return False
 
         self.grid[(row, col)] = building_type
+        self.dirty_tiles.add((row, col))
+        self.minimap_dirty = True
 
         if self.game_mode == "freeplay" and self.is_on_border(row, col):
             self.expand_grid()
 
         return True
+
 
     def has_adjacent_building(self, row, col):
         for dr, dc in [(-1, 0), (1, 0), (0, -1), (0, 1)]:
@@ -95,10 +104,10 @@ class Map:
 
     def draw_minimap(self):
         if not self.screen:
-            return  # safety check
+            return
 
-        minimap_tile = 10  # size of each tile in minimap
-        margin = 10       # padding from screen edge
+        minimap_tile = 10
+        margin = 10
 
         minimap_width = self.grid_size * minimap_tile
         minimap_height = self.grid_size * minimap_tile
@@ -107,30 +116,30 @@ class Map:
         minimap_x = screen_w - minimap_width - margin
         minimap_y = screen_h - minimap_height - margin
 
-        # Optional label
+        # Only rebuild the minimap surface if dirty
+        if self.minimap_dirty or self.minimap_surface is None:
+            self.minimap_surface = pygame.Surface((minimap_width, minimap_height))
+            self.minimap_surface.fill((230, 230, 230))
+            for row in range(self.grid_size):
+                for col in range(self.grid_size):
+                    color = (220, 220, 220)
+                    if (row, col) in self.grid:
+                        building = self.grid[(row, col)]
+                        color = BUILDING_COLORS.get(building, (128, 128, 128))
+                    x = col * minimap_tile
+                    y = row * minimap_tile
+                    pygame.draw.rect(self.minimap_surface, color, pygame.Rect(x, y, minimap_tile, minimap_tile))
+            pygame.draw.rect(self.minimap_surface, BLACK, self.minimap_surface.get_rect(), 2)
+            self.minimap_dirty = False
+
+        # Label
         font = pygame.font.SysFont("Arial", 14)
         label = font.render("Mini-map", True, (0, 0, 0))
         self.screen.blit(label, (minimap_x, minimap_y - 20))
 
-        for row in range(self.grid_size):
-            for col in range(self.grid_size):
-                color = (220, 220, 220)  # default empty tile
-                if (row, col) in self.grid:
-                    building = self.grid[(row, col)]
-                    color = BUILDING_COLORS.get(building, (128, 128, 128))
+        # Blit cached surface
+        self.screen.blit(self.minimap_surface, (minimap_x, minimap_y))
 
-                x = minimap_x + col * minimap_tile
-                y = minimap_y + row * minimap_tile
-                rect = pygame.Rect(x, y, minimap_tile, minimap_tile)
-                pygame.draw.rect(self.screen, color, rect)
-
-        # Optional border
-        pygame.draw.rect(
-            self.screen,
-            (0, 0, 0),
-            (minimap_x, minimap_y, minimap_width, minimap_height),
-            2
-        )
 
 
 
@@ -139,25 +148,29 @@ class Map:
         self.update_margins()
         font = pygame.font.SysFont("Arial", self.tile_size // 2)
 
-        for row in range(self.grid_size):
-            for col in range(self.grid_size):
-                x = self.left_margin + col * self.tile_size
-                y = self.top_margin + row * self.tile_size
-                rect = pygame.Rect(x, y, self.tile_size, self.tile_size)
-                building = self.grid.get((row, col))
+        if not self.dirty_tiles:
+            self.dirty_tiles = {(r, c) for r in range(self.grid_size) for c in range(self.grid_size)}
 
-                if building:
-                    color = BUILDING_COLORS.get(building, (211, 211, 211))
-                    pygame.draw.rect(self.screen, color, rect)
-                    text_surface = font.render(building, True, BLACK)
-                    text_rect = text_surface.get_rect(center=rect.center)
-                    self.screen.blit(text_surface, text_rect)
-                else:
-                    color = (240, 240, 240) if (row + col) % 2 == 0 else (250, 250, 250)
-                    pygame.draw.rect(self.screen, color, rect)
+        for (row, col) in self.dirty_tiles:
+            x = self.left_margin + col * self.tile_size
+            y = self.top_margin + row * self.tile_size
+            rect = pygame.Rect(x, y, self.tile_size, self.tile_size)
+            building = self.grid.get((row, col))
 
-                self.draw_minimap()
-                pygame.draw.rect(self.screen, BLACK, rect, 1)
+            if building:
+                color = BUILDING_COLORS.get(building, (211, 211, 211))
+                pygame.draw.rect(self.screen, color, rect)
+                text_surface = font.render(building, True, BLACK)
+                text_rect = text_surface.get_rect(center=rect.center)
+                self.screen.blit(text_surface, text_rect)
+            else:
+                color = (240, 240, 240) if (row + col) % 2 == 0 else (250, 250, 250)
+                pygame.draw.rect(self.screen, color, rect)
+
+            pygame.draw.rect(self.screen, BLACK, rect, 1)
+
+        self.dirty_tiles.clear()
+        self.draw_minimap()
 
     def is_on_border(self, row, col):
         return row == 0 or col == 0 or row == self.grid_size - 1 or col == self.grid_size - 1
@@ -172,20 +185,16 @@ class Map:
             new_grid[(row + expansion, col + expansion)] = value
         self.grid = new_grid
 
-        self.grid_size += expansion * 2  # Expand grid logically
+        self.grid_size += expansion * 2
 
-        # Handle tile size logic
         if self.expansion_count % 3 == 1 and self.expansion_count > 1:
-            # Every 3rd expansion (25x25, 35x35, etc.) => Increase tile size slightly
-            self.tile_size += 4  # Adjust as needed
+            self.tile_size += 4
             self.fixed_grid_pixel_size = self.tile_size * self.grid_size
             print(f"[Cycle Reset] Increased tile size to {self.tile_size}")
         else:
-            # Other expansions => Shrink tile size
             self.tile_size = max(16, self.fixed_grid_pixel_size // self.grid_size)
             print(f"[Shrink] Adjusted tile size to {self.tile_size}")
 
-        # Resize screen if needed
         screen_width, screen_height = self.screen.get_size()
         required_width = self.grid_size * self.tile_size + 100
         required_height = self.grid_size * self.tile_size + 100
@@ -194,6 +203,8 @@ class Map:
             self.screen = pygame.display.set_mode((required_width, required_height), pygame.RESIZABLE)
 
         self.update_margins()
+        self.dirty_tiles = {(r, c) for r in range(self.grid_size) for c in range(self.grid_size)}
+        self.minimap_dirty = True
         print(f"Expanded to {self.grid_size} x {self.grid_size} | Tile: {self.tile_size}px")
 
 # --- Main Execution ---
