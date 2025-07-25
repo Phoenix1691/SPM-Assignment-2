@@ -4,6 +4,9 @@ import pygame
 import sys
 from arcade_mode import main as arcade_main
 from freeplay import main as freeplay_main
+import pickle
+
+
 
 # Colors
 WHITE = (255, 255, 255)
@@ -19,6 +22,29 @@ buttons = {
     "Display High Scores": pygame.Rect(250, 310, 300, 50),
     "Exit Game": pygame.Rect(250, 380, 300, 50),
 }
+
+def load_saved_game(filename="savegame.pkl"):
+    try:
+        with open(filename, 'rb') as f:
+            data = pickle.load(f)
+    except FileNotFoundError:
+        print("No saved game found.")
+        return None
+
+    mode = data.get('mode')
+    if mode == 'arcade':
+        from arcade_mode import ArcadeGame
+        game = ArcadeGame()
+    elif mode == 'freeplay':
+        from freeplay import FreeplayGame
+        game = FreeplayGame()
+    else:
+        print("Unknown saved game mode.")
+        return None
+    
+    game.load_data(data)  # You implement load_data in both classes to restore game state
+    return game
+
 
 def draw_text_center(screen, text, rect, font, color=WHITE):
     text_surface = font.render(text, True, color)
@@ -57,16 +83,25 @@ def main_menu():
                         elif text == "Start New Free Play Game":
                             freeplay_main() # Run freeplay mode
                         elif text == "Load Saved Game":
-                            # Implement your load saved game function here
-                            print("Load saved game clicked")
+                            from saveutils import load_saved_game  # or place this import at the top
+                            pygame.quit()
+                            game = load_saved_game()
+                            if game is not None:
+                                pygame.init()
+                                screen = pygame.display.set_mode((800, 600))
+                                game.run()
+                            else:
+                                pygame.init()
+                                main_menu()
+                            return
                         elif text == "Display High Scores":
-                            # Implement your high scores display here
                             print("Display high scores clicked")
                         elif text == "Exit Game":
                             pygame.quit()
                             sys.exit()
 
         pygame.display.flip()
+
 
 if __name__ == "__main__":
     main_menu()
