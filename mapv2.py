@@ -15,12 +15,11 @@ BUILDING_COLORS = {
 UI_HEIGHT = 90  # or STATS_HEIGHT + BUTTON_HEIGHT + margin
 
 class Map:
-    def __init__(self, game_mode, grid_size):
-    # def __init__(self, game_mode, grid_size, screen):
+    def __init__(self, game_mode, grid_size, screen=None):
         self.game_mode = game_mode
         self.grid_size = grid_size
         self.grid = {}
-        self.screen = None
+        self.screen = screen  
         self.expansion_count = 0
         self.first_turn = True
         self.tile_size = 0  # To be set during screen init
@@ -50,8 +49,10 @@ class Map:
         self.tile_size = max(16, min(max_tile_size, screen_w // self.grid_size, usable_h // self.grid_size))
         self.fixed_grid_pixel_size = self.tile_size * self.grid_size
 
-        # Create fullscreen window
-        self.screen = pygame.display.set_mode((screen_w, screen_h), pygame.FULLSCREEN)
+        # Only create screen if not already provided
+        if self.screen is None:
+            self.screen = pygame.display.set_mode((screen_w, screen_h), pygame.FULLSCREEN)
+
         pygame.display.set_caption("Ngee Ann City")
 
         self.update_margins()
