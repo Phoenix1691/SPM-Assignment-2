@@ -10,6 +10,8 @@ import pygame
 import random
 import pickle
 from mapv2 import Map  # Ensure mapv2.py with Map class is in the same folder
+from main_menu import main_menu
+
 
 
 SCREEN_WIDTH = 800
@@ -191,8 +193,11 @@ def main():
                 return
             elif event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
                 pos = event.pos
-                if main_menu_btn.collidepoint(pos):  # Main menu click
-                    return  # Exit arcade mode and go back to main menu
+                if main_menu_btn.collidepoint(pos):
+                    pygame.quit()
+                    main_menu()  # Go back to the main menu screen
+                    return
+
                 if button1.collidepoint(pos):
                     placing_building = game.building_choices[0]
                     demolishing = False
