@@ -147,6 +147,87 @@ class ArcadeGame:
         self.building_choices = data['building_choices']
         self.selected_building = data['selected_building']
         self.game_over = data['game_over']
+        
+    def run(self):
+        pygame.init()
+        clock = pygame.time.Clock()
+        font = pygame.font.SysFont("Arial", 20)
+
+        placing_building = None
+        demolishing = False
+        message = ""
+
+        button1 = pygame.Rect(500, 10, 40, 30)
+        button2 = pygame.Rect(550, 10, 40, 30)
+        demolish_btn = pygame.Rect(610, 10, 90, 30)
+        save_btn = pygame.Rect(710, 10, 80, 30)
+        main_menu_btn = pygame.Rect(610, 50, 180, 30)
+
+        while True:
+            self.map.draw()
+            draw_stats(self.map.screen, self)
+
+            pygame.draw.rect(self.map.screen, (180, 180, 255), button1)
+            pygame.draw.rect(self.map.screen, (180, 180, 255), button2)
+            pygame.draw.rect(self.map.screen, (255, 180, 180), demolish_btn)
+            pygame.draw.rect(self.map.screen, (180, 255, 180), save_btn)
+
+            pygame.draw.rect(self.map.screen, (200, 200, 200), main_menu_btn)
+            pygame.draw.rect(self.map.screen, (0, 0, 0), main_menu_btn, 2)
+            self.map.screen.blit(font.render("Main Menu", True, (0, 0, 0)), main_menu_btn.move(40, 5))
+
+            self.map.screen.blit(font.render(self.building_choices[0], True, (0, 0, 0)), button1.move(10, 5))
+            self.map.screen.blit(font.render(self.building_choices[1], True, (0, 0, 0)), button2.move(10, 5))
+            self.map.screen.blit(font.render("Demolish", True, (0, 0, 0)), demolish_btn.move(5, 5))
+            self.map.screen.blit(font.render("Save", True, (0, 0, 0)), save_btn.move(10, 5))
+
+            if message:
+                msg_surface = font.render(message, True, (255, 0, 0))
+                self.map.screen.blit(msg_surface, (10, STATS_HEIGHT + 5))
+
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    pygame.quit()
+                    return
+                elif event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
+                    pos = event.pos
+                    if main_menu_btn.collidepoint(pos):
+                        pygame.quit()
+                        from mainMenu import main_menu
+                        main_menu()
+                        return
+
+                    if button1.collidepoint(pos):
+                        placing_building = self.building_choices[0]
+                        demolishing = False
+                        message = f"Placing: {placing_building}"
+                    elif button2.collidepoint(pos):
+                        placing_building = self.building_choices[1]
+                        demolishing = False
+                        message = f"Placing: {placing_building}"
+                    elif demolish_btn.collidepoint(pos):
+                        demolishing = True
+                        placing_building = None
+                        message = "Demolish mode."
+                    elif save_btn.collidepoint(pos):
+                        self.save_game()
+                        message = "Game saved."
+                    else:
+                        msg = ""
+                        if demolishing:
+                            success, msg = self.demolish_building(pos)
+                        elif placing_building:
+                            success, msg = self.place_building(pos, placing_building)
+                            if success:
+                                placing_building = None
+                        message = msg
+
+            if self.game_over:
+                message = "Game Over! Final Score: " + str(self.score)
+
+            pygame.display.flip()
+            clock.tick(30)
+
 
 
 def draw_stats(screen, game):
@@ -157,86 +238,9 @@ def draw_stats(screen, game):
     screen.blit(font.render(f"Score: {game.score}", True, (0, 0, 0)), (300, 10))
 
 def main():
-    pygame.init()
     game = ArcadeGame()
-    clock = pygame.time.Clock()
-    font = pygame.font.SysFont("Arial", 20)
-
-    placing_building = None
-    demolishing = False
-    message = ""
-
-    button1 = pygame.Rect(500, 10, 40, 30)
-    button2 = pygame.Rect(550, 10, 40, 30)
-    demolish_btn = pygame.Rect(610, 10, 90, 30)
-    save_btn = pygame.Rect(710, 10, 80, 30)
-    main_menu_btn = pygame.Rect(610, 50, 180, 30)  # NEW Main Menu button
-
-    while True:
-        game.map.draw()
-        draw_stats(game.map.screen, game)
-
-        pygame.draw.rect(game.map.screen, (180, 180, 255), button1)
-        pygame.draw.rect(game.map.screen, (180, 180, 255), button2)
-        pygame.draw.rect(game.map.screen, (255, 180, 180), demolish_btn)
-        pygame.draw.rect(game.map.screen, (180, 255, 180), save_btn)
-
-        # Draw Main Menu button
-        pygame.draw.rect(game.map.screen, (200, 200, 200), main_menu_btn)
-        pygame.draw.rect(game.map.screen, (0, 0, 0), main_menu_btn, 2)  # border
-        game.map.screen.blit(font.render("Main Menu", True, (0, 0, 0)), main_menu_btn.move(40, 5))
-
-        game.map.screen.blit(font.render(game.building_choices[0], True, (0, 0, 0)), button1.move(10, 5))
-        game.map.screen.blit(font.render(game.building_choices[1], True, (0, 0, 0)), button2.move(10, 5))
-        game.map.screen.blit(font.render("Demolish", True, (0, 0, 0)), demolish_btn.move(5, 5))
-        game.map.screen.blit(font.render("Save", True, (0, 0, 0)), save_btn.move(10, 5))
-
-        if message:
-            msg_surface = font.render(message, True, (255, 0, 0))
-            game.map.screen.blit(msg_surface, (10, STATS_HEIGHT + 5))
-
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                pygame.quit()
-                return
-            elif event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
-                pos = event.pos
-                if main_menu_btn.collidepoint(pos):
-                    pygame.quit()
-                    from mainMenu import main_menu
-                    main_menu()  # Go back to the main menu screen
-                    return
-
-                if button1.collidepoint(pos):
-                    placing_building = game.building_choices[0]
-                    demolishing = False
-                    message = f"Placing: {placing_building}"
-                elif button2.collidepoint(pos):
-                    placing_building = game.building_choices[1]
-                    demolishing = False
-                    message = f"Placing: {placing_building}"
-                elif demolish_btn.collidepoint(pos):
-                    demolishing = True
-                    placing_building = None
-                    message = "Demolish mode."
-                elif save_btn.collidepoint(pos):
-                    game.save_game()
-                    message = "Game saved."
-                else:
-                    msg= ""
-                    if demolishing:
-                        success, msg = game.demolish_building(pos)
-                    elif placing_building:
-                        success, msg = game.place_building(pos, placing_building)
-                        if success:
-                            placing_building = None
-                    message = msg
-
-        if game.game_over:
-            message = "Game Over! Final Score: " + str(game.score)
-
-        pygame.display.flip()
-        clock.tick(30)
+    game.run()
+    
 
 if __name__ == "__main__":
     main()
