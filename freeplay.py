@@ -174,7 +174,7 @@ class FreePlayGame:
             for r, c in affected_positions:
                 self.score += self.calculate_cell_score(r, c)
             return True, "Building demolished."
-    return False, "No building to demolish here."
+        return False, "No building to demolish here."
     
     def next_turn(self):
         profit, upkeep = self.calculate_profit_and_upkeep()
