@@ -10,7 +10,7 @@ import pygame
 import random
 import pickle
 from mapv2 import Map  # Ensure mapv2.py with Map class is in the same folder
-from main_menu import main_menu
+from mainMenu import main_menu
 
 
 
