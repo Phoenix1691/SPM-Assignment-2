@@ -28,25 +28,26 @@ def draw_text_center(screen, text, rect, font, color=WHITE):
 
 def load_saved_game(filename="savegame.pkl"):
     try:
-        with open(filename, "rb") as f:
-            game = pickle.load(f)
-            print("Loaded saved game successfully.")
-            return game
-    except (FileNotFoundError, EOFError, pickle.PickleError) as e:
-        print("No saved game found or error during loading.")
+        with open(filename, 'rb') as f:
+            data = pickle.load(f)
+    except FileNotFoundError:
+        print("No saved game found.")
         return None
 
     mode = data.get('mode')
     if mode == 'arcade':
+        from arcade_mode import ArcadeGame
         game = ArcadeGame()
     elif mode == 'freeplay':
+        from freeplay import FreeplayGame
         game = FreeplayGame()
     else:
         print("Unknown saved game mode.")
         return None
 
-    game.load_data(data)  # Assumes your classes have load_data implemented
+    game.load_data(data)  # You must implement this in each class
     return game
+
 
 def main_menu():
     pygame.init()
