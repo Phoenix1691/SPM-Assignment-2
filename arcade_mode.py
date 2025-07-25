@@ -138,8 +138,8 @@ class ArcadeGame:
         }
         with open(filename, 'wb') as f:
             pickle.dump(data, f)
-
-   def load_data(self, data):
+    
+    def load_data(self, data):
         self.map.grid = data['grid']
         self.turn = data['turn']
         self.coins = data['coins']
@@ -147,6 +147,7 @@ class ArcadeGame:
         self.building_choices = data['building_choices']
         self.selected_building = data['selected_building']
         self.game_over = data['game_over']
+
 
 def draw_stats(screen, game):
     font = pygame.font.SysFont("Arial", 24)
