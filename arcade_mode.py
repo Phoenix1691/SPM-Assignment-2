@@ -125,7 +125,7 @@ class ArcadeGame:
                 counts[b] = counts.get(b, 0) + 1
         return counts
 
-    def save_game(self, filename="arcade_save.pkl"):
+    def save_game(self, filename="savegame.pkl"):
         data = {
             'grid': self.map.grid,
             'turn': self.turn,
@@ -138,7 +138,7 @@ class ArcadeGame:
         with open(filename, 'wb') as f:
             pickle.dump(data, f)
 
-    def load_game(cls, screen, filename="arcade_save.pkl"):
+    def load_game(cls, screen, filename="savegame.pkl"):
         with open(filename, 'rb') as f:
             data = pickle.load(f)
         
