@@ -28,10 +28,12 @@ def draw_text_center(screen, text, rect, font, color=WHITE):
 
 def load_saved_game(filename="savegame.pkl"):
     try:
-        with open(filename, 'rb') as f:
-            data = pickle.load(f)
-    except FileNotFoundError:
-        print("No saved game found.")
+        with open(filename, "rb") as f:
+            game = pickle.load(f)
+            print("Loaded saved game successfully.")
+            return game
+    except (FileNotFoundError, EOFError, pickle.PickleError) as e:
+        print("No saved game found or error during loading.")
         return None
 
     mode = data.get('mode')
