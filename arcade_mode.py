@@ -10,7 +10,7 @@ import pygame
 import random
 import pickle
 from mapv2 import Map  # Ensure mapv2.py with Map class is in the same folder
-from mainMenu import main_menu
+
 
 
 
@@ -195,6 +195,7 @@ def main():
                 pos = event.pos
                 if main_menu_btn.collidepoint(pos):
                     pygame.quit()
+                    from mainMenu import main_menu
                     main_menu()  # Go back to the main menu screen
                     return
 
