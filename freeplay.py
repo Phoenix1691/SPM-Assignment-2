@@ -137,41 +137,46 @@ class FreePlayGame:
         score += sum(1 for b in self.map.grid.values() if b == "I")
         return score
 
-    def place_building(self, pos):
-        if self.demolish_mode:
-            return False, "Cannot place building in demolish mode."
+   def place_building(self, pos):
+    if self.demolish_mode:
+        return False, "Cannot place building in demolish mode."
 
-        x, y = pos
-        # Calculate grid coords based on current tile size and stats height
-        row = (y - STATS_HEIGHT) // self.map.tile_size
-        col = x // self.map.tile_size
+    x, y = pos
+    row = (y - STATS_HEIGHT) // self.map.tile_size
+    col = x // self.map.tile_size
 
-        # Allow placement anywhere — no adjacency check
-        if (row, col) not in self.map.grid:
-            self.map.grid[(row, col)] = self.selected_building
+    if (row, col) not in self.map.grid:
+        self.map.grid[(row, col)] = self.selected_building
 
-            # If placed building on border, expand grid
-            if self.map.is_on_border(row, col):
-                self.map.expand_grid()
+        if self.map.is_on_border(row, col):
+            self.map.expand_grid()
 
-            self.turn += 1
-            self.score = self.calculate_score()
-            self.map.first_turn = False
-            return True, "Building placed."
-        else:
-            return False, "Cell already occupied."
+        self.turn += 1
+        
+        # Only update score for changed cell and neighbors
+        affected_positions = [(row, col)] + [(row+dy, col+dx) for dx, dy in [(-1,0),(1,0),(0,-1),(0,1)]]
+        self.score = 0
+        for r, c in affected_positions:
+            self.score += self.calculate_cell_score(r, c)
 
+        self.map.first_turn = False
+        return True, "Building placed."
+    else:
+        return False, "Cell already occupied."
     def demolish_building(self, pos):
         x, y = pos
         row = (y - STATS_HEIGHT) // self.map.tile_size
         col = x // self.map.tile_size
         if (row, col) in self.map.grid:
             del self.map.grid[(row, col)]
-            self.score = self.calculate_score()
             self.turn += 1
+            affected_positions = [(row, col)] + [(row+dy, col+dx) for dx, dy in [(-1,0),(1,0),(0,-1),(0,1)]]
+            self.score = 0
+            for r, c in affected_positions:
+                self.score += self.calculate_cell_score(r, c)
             return True, "Building demolished."
-        return False, "No building to demolish here."
-
+    return False, "No building to demolish here."
+    
     def next_turn(self):
         profit, upkeep = self.calculate_profit_and_upkeep()
         net = profit - upkeep
