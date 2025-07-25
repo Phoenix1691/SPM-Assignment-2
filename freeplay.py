@@ -141,9 +141,10 @@ class FreePlayGame:
             return False, "Cannot place building in demolish mode."
 
         x, y = pos
-        row = (y - STATS_HEIGHT) // self.map.tile_size
-        col = x // self.map.tile_size
-
+        row = (y - self.map.top_margin) // self.map.tile_size
+        col = (x - self.map.left_margin) // self.map.tile_size
+        if row < 0 or col < 0 or row >= self.map.grid_size or col >= self.map.grid_size:
+            return False, "Invalid placement."
         if (row, col) not in self.map.grid:
             self.map.grid[(row, col)] = self.selected_building
 
@@ -157,10 +158,14 @@ class FreePlayGame:
         else:
             return False, "Cell already occupied."
 
+
+    
     def demolish_building(self, pos):
         x, y = pos
-        row = (y - STATS_HEIGHT) // self.map.tile_size
-        col = x // self.map.tile_size
+        row = (y - self.map.top_margin) // self.map.tile_size
+        col = (x - self.map.left_margin) // self.map.tile_size
+        if row < 0 or col < 0 or row >= self.map.grid_size or col >= self.map.grid_size:
+            return False, "Invalid placement."
         if (row, col) in self.map.grid:
             del self.map.grid[(row, col)]
             self.turn += 1
@@ -195,8 +200,6 @@ class FreePlayGame:
         self.message = msg
         self.message_timer = duration
 
-
-
 def draw_stats(screen, game):
     font = pygame.font.SysFont("Arial", 20)
     pygame.draw.rect(screen, WHITE, (0, 0, SCREEN_WIDTH, STATS_HEIGHT))
@@ -225,7 +228,7 @@ def draw_building_buttons(screen, selected_building, demolish_mode):
         pygame.draw.rect(screen, color, rect)
         pygame.draw.rect(screen, BLACK, rect, 2)  # border
 
-        label_text = option
+        label_text = "Demolish" if option == "D" else option
         label = font.render(label_text, True, BLACK)
         label_rect = label.get_rect(center=rect.center)
         screen.blit(label, label_rect)
@@ -261,13 +264,11 @@ def main():
 
     while True:
         screen.fill(WHITE)
-
+        # Draw game map
+        game.map.draw()
         # Draw stats and buttons
         draw_stats(screen, game)
         buttons = draw_building_buttons(screen, game.selected_building, game.demolish_mode)
-
-        # Draw game map
-        game.map.draw()
 
         # Show message if any
         if game.message_timer > 0:
