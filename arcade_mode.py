@@ -160,6 +160,7 @@ def main():
     button2 = pygame.Rect(550, 10, 40, 30)
     demolish_btn = pygame.Rect(610, 10, 90, 30)
     save_btn = pygame.Rect(710, 10, 80, 30)
+    main_menu_btn = pygame.Rect(610, 50, 180, 30)  # NEW Main Menu button
 
     while True:
         game.map.draw()
@@ -169,6 +170,11 @@ def main():
         pygame.draw.rect(game.map.screen, (180, 180, 255), button2)
         pygame.draw.rect(game.map.screen, (255, 180, 180), demolish_btn)
         pygame.draw.rect(game.map.screen, (180, 255, 180), save_btn)
+
+        # Draw Main Menu button
+        pygame.draw.rect(game.map.screen, (200, 200, 200), main_menu_btn)
+        pygame.draw.rect(game.map.screen, (0, 0, 0), main_menu_btn, 2)  # border
+        game.map.screen.blit(font.render("Main Menu", True, (0, 0, 0)), main_menu_btn.move(40, 5))
 
         game.map.screen.blit(font.render(game.building_choices[0], True, (0, 0, 0)), button1.move(10, 5))
         game.map.screen.blit(font.render(game.building_choices[1], True, (0, 0, 0)), button2.move(10, 5))
@@ -185,6 +191,8 @@ def main():
                 return
             elif event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
                 pos = event.pos
+                if main_menu_btn.collidepoint(pos):  # Main menu click
+                    return  # Exit arcade mode and go back to main menu
                 if button1.collidepoint(pos):
                     placing_building = game.building_choices[0]
                     demolishing = False
