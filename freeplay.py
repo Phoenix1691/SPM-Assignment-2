@@ -124,7 +124,6 @@ class FreePlayGame:
                     if "I" in adj:
                         score += 1
                     else:
-                        # Fixed here: replaced undefined 'adjacent' with 'adj'
                         score += adj.count("R") + adj.count("C") + 2 * adj.count("O")
                 elif cell == "I":
                     score += 0
@@ -136,6 +135,7 @@ class FreePlayGame:
                     score += 1
         score += sum(1 for b in self.map.grid.values() if b == "I")
         return score
+
     def place_building(self, pos):
         if self.demolish_mode:
             return False, "Cannot place building in demolish mode."
@@ -151,17 +151,12 @@ class FreePlayGame:
                 self.map.expand_grid()
 
             self.turn += 1
-
-            # Only update score for changed cell and neighbors
-            affected_positions = [(row, col)] + [(row + dy, col + dx) for dx, dy in [(-1,0),(1,0),(0,-1),(0,1)]]
-            self.score = 0
-            for r, c in affected_positions:
-                self.score += self.calculate_cell_score(r, c)
-
+            self.score = self.calculate_score()
             self.map.first_turn = False
             return True, "Building placed."
         else:
             return False, "Cell already occupied."
+
     def demolish_building(self, pos):
         x, y = pos
         row = (y - STATS_HEIGHT) // self.map.tile_size
@@ -169,13 +164,10 @@ class FreePlayGame:
         if (row, col) in self.map.grid:
             del self.map.grid[(row, col)]
             self.turn += 1
-            affected_positions = [(row, col)] + [(row+dy, col+dx) for dx, dy in [(-1,0),(1,0),(0,-1),(0,1)]]
-            self.score = 0
-            for r, c in affected_positions:
-                self.score += self.calculate_cell_score(r, c)
+            self.score = self.calculate_score()
             return True, "Building demolished."
         return False, "No building to demolish here."
-    
+
     def next_turn(self):
         profit, upkeep = self.calculate_profit_and_upkeep()
         net = profit - upkeep
