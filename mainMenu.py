@@ -2,11 +2,9 @@
 
 import pygame
 import sys
-from arcade_mode import main as arcade_main
-from freeplay import main as freeplay_main
 import pickle
-
-
+from arcade_mode import main as arcade_main, ArcadeGame
+from freeplay import main as freeplay_main, FreeplayGame
 
 # Colors
 WHITE = (255, 255, 255)
@@ -23,6 +21,11 @@ buttons = {
     "Exit Game": pygame.Rect(250, 380, 300, 50),
 }
 
+def draw_text_center(screen, text, rect, font, color=WHITE):
+    text_surface = font.render(text, True, color)
+    text_rect = text_surface.get_rect(center=rect.center)
+    screen.blit(text_surface, text_rect)
+
 def load_saved_game(filename="savegame.pkl"):
     try:
         with open(filename, 'rb') as f:
@@ -33,23 +36,15 @@ def load_saved_game(filename="savegame.pkl"):
 
     mode = data.get('mode')
     if mode == 'arcade':
-        from arcade_mode import ArcadeGame
         game = ArcadeGame()
     elif mode == 'freeplay':
-        from freeplay import FreeplayGame
         game = FreeplayGame()
     else:
         print("Unknown saved game mode.")
         return None
-    
-    game.load_data(data)  # You implement load_data in both classes to restore game state
+
+    game.load_data(data)  # Assumes your classes have load_data implemented
     return game
-
-
-def draw_text_center(screen, text, rect, font, color=WHITE):
-    text_surface = font.render(text, True, color)
-    text_rect = text_surface.get_rect(center=rect.center)
-    screen.blit(text_surface, text_rect)
 
 def main_menu():
     pygame.init()
@@ -63,10 +58,7 @@ def main_menu():
 
         # Draw buttons
         for text, rect in buttons.items():
-            if rect.collidepoint(mouse_pos):
-                color = BUTTON_HOVER_COLOR
-            else:
-                color = BUTTON_COLOR
+            color = BUTTON_HOVER_COLOR if rect.collidepoint(mouse_pos) else BUTTON_COLOR
             pygame.draw.rect(screen, color, rect)
             draw_text_center(screen, text, rect, font)
 
@@ -79,14 +71,13 @@ def main_menu():
                 for text, rect in buttons.items():
                     if rect.collidepoint(event.pos):
                         if text == "Start New Arcade Game":
-                            arcade_main()   # Run arcade mode
+                            arcade_main()
                         elif text == "Start New Free Play Game":
-                            freeplay_main() # Run freeplay mode
+                            freeplay_main()
                         elif text == "Load Saved Game":
-                            from saveutils import load_saved_game  # or place this import at the top
-                            pygame.quit()
+                            pygame.quit()  # Quit current display to re-init game
                             game = load_saved_game()
-                            if game is not None:
+                            if game:
                                 pygame.init()
                                 screen = pygame.display.set_mode((800, 600))
                                 game.run()
@@ -102,6 +93,6 @@ def main_menu():
 
         pygame.display.flip()
 
-
 if __name__ == "__main__":
     main_menu()
+
