@@ -51,7 +51,7 @@ class Map:
 
         # Only create screen if not already provided
         if self.screen is None:
-            self.screen = pygame.display.set_mode((screen_w, screen_h), pygame.FULLSCREEN)
+            self.screen = pygame.display.set_mode((screen_w, screen_h), pygame.RESIZABLE)
 
         pygame.display.set_caption("Ngee Ann City")
 
