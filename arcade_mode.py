@@ -11,9 +11,6 @@ import random
 import pickle
 from mapv2 import Map  # Ensure mapv2.py with Map class is in the same folder
 
-
-
-
 SCREEN_WIDTH = 800
 STATS_HEIGHT = 80
 GRID_SIZE = 20
@@ -140,6 +137,20 @@ class ArcadeGame:
         }
         with open(filename, 'wb') as f:
             pickle.dump(data, f)
+
+    def load_game(cls, screen, filename="arcade_save.pkl"):
+        with open(filename, 'rb') as f:
+            data = pickle.load(f)
+        
+        game = cls(screen)
+        game.map.grid = data['grid']
+        game.turn = data['turn']
+        game.coins = data['coins']
+        game.score = data['score']
+        game.building_choices = data['building_choices']
+        game.selected_building = data['selected_building']
+        game.game_over = data['game_over']
+        return game
 
 def draw_stats(screen, game):
     font = pygame.font.SysFont("Arial", 24)
