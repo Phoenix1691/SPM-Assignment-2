@@ -77,7 +77,7 @@ def main_menu():
                         if text == "Start New Arcade Game":
                             arcade_main()
                         elif text == "Start New Free Play Game":
-                            game = FreePlayGame()
+                            game = FreePlayGame(screen)
                             game.run()
                         elif text == "Load Saved Game":
                             game = load_saved_game()
