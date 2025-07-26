@@ -75,21 +75,16 @@ def main_menu():
                 for text, rect in buttons.items():
                     if rect.collidepoint(event.pos):
                         if text == "Start New Arcade Game":
-                            arcade_main()
+                            arcade_main()  # assumes arcade_main() manages its own loop and returns here when done
                         elif text == "Start New Free Play Game":
                             game = FreePlayGame(screen)
-                            game.run()
+                            game.run()  # run game loop; returns here after game over or exit
                         elif text == "Load Saved Game":
                             game = load_saved_game(screen)
                             if game:
-                                pygame.init()
-                                info = pygame.display.Info()
-                                screen = pygame.display.set_mode((info.current_w, info.current_h), pygame.RESIZABLE)
-                                game.run()
+                                game.run()  # run loaded game loop
                             else:
-                                pygame.init()
-                                main_menu()
-                            return
+                                print("No saved game to load.")
                         elif text == "Display High Scores":
                             print("Display high scores clicked")
                         elif text == "Exit Game":
@@ -97,6 +92,7 @@ def main_menu():
                             sys.exit()
 
         pygame.display.flip()
+
 
 if __name__ == "__main__":
     main_menu()
