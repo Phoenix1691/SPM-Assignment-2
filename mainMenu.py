@@ -40,7 +40,7 @@ def load_saved_game(filename="savegame.pkl"):
         from arcade_mode import ArcadeGame
         game = ArcadeGame()
     elif mode == 'freeplay':
-        from freeplay import FreeplayGame
+        from freeplay import FreePlayGame
         game = FreeplayGame()
     else:
         print("Unknown saved game mode.")
