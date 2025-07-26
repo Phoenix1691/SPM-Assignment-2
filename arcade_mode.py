@@ -224,14 +224,13 @@ class ArcadeGame:
 
             if self.game_over:
                 message = "Game Over! Final Score: " + str(self.score)
-                if self.game_over:
-                    from mainMenu import main_menu
-                    message = "Game Over! Final Score: " + str(self.score)
-                    pygame.display.flip()
-                    pygame.time.wait(3000) 
-                    pygame.quit()
-                    main_menu()
-                    return
+                from mainMenu import main_menu
+                message = "Game Over! Final Score: " + str(self.score)
+                pygame.display.flip()
+                pygame.time.wait(3000) 
+                pygame.quit()
+                main_menu()
+                return
 
             pygame.display.flip()
             clock.tick(30)
