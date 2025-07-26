@@ -306,7 +306,11 @@ class FreePlayGame:
             'grid': self.map.grid,
             'turn': self.turn,
             'loss_turns': self.loss_turns,
-            'score': self.score
+            'score': self.score,
+            'grid_size': self.map.grid_size,
+            'tile_size': self.map.tile_size,
+            'left_margin': self.map.left_margin,
+            'top_margin': self.map.top_margin,
         }
         with open(filename, 'wb') as f:
             pickle.dump(data, f)
@@ -319,6 +323,10 @@ class FreePlayGame:
         self.turn = data['turn']
         self.loss_turns = data['loss_turns']
         self.score = data['score']
+        self.map.grid_size = data.get('grid_size', 5)  # default fallback 5
+        self.map.tile_size = data.get('tile_size', 64) # or your default tile size
+        self.map.left_margin = data.get('left_margin', 0)
+        self.map.top_margin = data.get('top_margin', 0)
 
     def show_message(self, msg, duration=120):
         self.message = msg
