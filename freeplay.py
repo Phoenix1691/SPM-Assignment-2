@@ -13,7 +13,7 @@ import pygame
 import os
 import pickle
 from mapv2 import Map  # Your mapv2.py with Map class
-from mainMenu import main_menu
+
 
 
 SCREEN_WIDTH = 800
@@ -101,6 +101,7 @@ class FreePlayGame:
                         self.show_message(msg)
 
             if self.is_game_over():
+                from mainMenu import main_menu
                 font = pygame.font.SysFont("Arial", 40)
                 label = font.render("Game Over: 20 turns of loss", True, RED)
                 self.screen.blit(label, (100, SCREEN_HEIGHT // 2))
@@ -121,6 +122,7 @@ class FreePlayGame:
                 elif option == "Save":
                     self.save_game()
                 elif option == "Menu":
+                    from mainMenu import main_menu
                     pygame.quit()
                     main_menu()
                 else:
