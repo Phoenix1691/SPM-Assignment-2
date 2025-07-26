@@ -13,7 +13,7 @@ import pygame
 import os
 import pickle
 from mapv2 import Map  # Your mapv2.py with Map class
-from mainMenu import main_menu
+
 
 SCREEN_WIDTH = 800
 SCREEN_HEIGHT = 650
@@ -290,6 +290,7 @@ def handle_button_click(pos, buttons, game):
             elif option == "Save":
                 game.save_game()
             elif option == "Menu":
+                from mainMenu import main_menu
                 pygame.quit()
                 main_menu()
             else:
