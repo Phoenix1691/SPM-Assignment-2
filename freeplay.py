@@ -13,6 +13,7 @@ import pygame
 import os
 import pickle
 from mapv2 import Map  # Your mapv2.py with Map class
+from mainMenu import main_menu
 
 
 SCREEN_WIDTH = 800
@@ -120,7 +121,6 @@ class FreePlayGame:
                 elif option == "Save":
                     self.save_game()
                 elif option == "Menu":
-                    from mainMenu import main_menu
                     pygame.quit()
                     main_menu()
                 else:
