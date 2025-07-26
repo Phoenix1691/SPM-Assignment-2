@@ -32,7 +32,7 @@ BUILDING_COLORS = {
     "C": (150, 200, 255),
     "O": (180, 255, 180),
     "*": (150, 150, 150),
-    "D": (255, 0, 0)  # Demolish button color
+    "D": (255, 0, 0),  # Demolish button color
     "Save": (100, 255, 100),
     "Menu": (255, 200, 0)
 }
