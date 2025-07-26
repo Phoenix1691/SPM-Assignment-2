@@ -80,7 +80,7 @@ def main_menu():
                             game = FreePlayGame(screen)
                             game.run()
                         elif text == "Load Saved Game":
-                            game = load_saved_game()
+                            game = load_saved_game(screen)
                             if game:
                                 pygame.init()
                                 info = pygame.display.Info()
