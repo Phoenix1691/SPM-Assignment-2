@@ -223,18 +223,18 @@ class ArcadeGame:
                         message = msg
 
             if self.game_over:
-                message = "Game Over! Final Score: " + str(self.score)
-                from mainMenu import main_menu
-                message = "Game Over! Final Score: " + str(self.score)
+                font = pygame.font.SysFont("Arial", 40)
+                text_surface = font.render(f"Game Over! Final Score: {self.score}", True, (255, 0, 0))
+                text_rect = text_surface.get_rect(center=(SCREEN_WIDTH // 2, self.map.screen.get_height() // 2))
+                self.map.screen.blit(text_surface, text_rect)
                 pygame.display.flip()
-                pygame.time.wait(3000) 
-                pygame.quit()
+                pygame.time.wait(3000)
+                from mainMenu import main_menu
                 main_menu()
                 return
 
             pygame.display.flip()
             clock.tick(30)
-
 
 
 def draw_stats(screen, game):
