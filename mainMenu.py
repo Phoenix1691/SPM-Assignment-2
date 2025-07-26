@@ -4,7 +4,8 @@ import pygame
 import sys
 import pickle
 from arcade_mode import main as arcade_main
-from freeplay import main as freeplay_main
+from freeplay import FreePlayGame
+
 
 # Colors
 WHITE = (255, 255, 255)
