@@ -78,7 +78,6 @@ def main_menu():
                         elif text == "Start New Free Play Game":
                             freeplay_main()
                         elif text == "Load Saved Game":
-                            pygame.quit()  # Quit current display to re-init game
                             game = load_saved_game()
                             if game:
                                 pygame.init()
