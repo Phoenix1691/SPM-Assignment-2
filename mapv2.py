@@ -129,45 +129,23 @@ class Map:
         return False
 
     def draw_minimap(self):
-        if not self.screen:
-            return
+        minimap_size = 150  # Fixed minimap size in pixels
+        minimap_tile = minimap_size // self.grid_size
+        minimap_margin = 10  # Padding from screen edges
 
-        minimap_tile = 10
-        margin = 10
+        minimap_x = self.screen.get_width() - minimap_size - minimap_margin
+        minimap_y = self.screen.get_height() - minimap_size - minimap_margin
 
-        minimap_width = self.grid_size * minimap_tile
-        minimap_height = self.grid_size * minimap_tile
+        # Draw minimap background
+        pygame.draw.rect(self.screen, (30, 30, 30), (minimap_x, minimap_y, minimap_size, minimap_size))
 
-        screen_w, screen_h = self.screen.get_size()
-        minimap_x = screen_w - minimap_width - margin
-        minimap_y = screen_h - minimap_height - margin
+        for (row, col), value in self.grid.items():
+            color = BUILDING_COLORS.get(value, GRAY)
+            x = minimap_x + col * minimap_tile
+            y = minimap_y + row * minimap_tile
 
-        # Only rebuild the minimap surface if dirty
-        if self.minimap_dirty or self.minimap_surface is None:
-            self.minimap_surface = pygame.Surface((minimap_width, minimap_height))
-            self.minimap_surface.fill((230, 230, 230))
-            for row in range(self.grid_size):
-                for col in range(self.grid_size):
-                    color = (220, 220, 220)
-                    if (row, col) in self.grid:
-                        building = self.grid[(row, col)]
-                        color = BUILDING_COLORS.get(building, (128, 128, 128))
-                    x = col * minimap_tile
-                    y = row * minimap_tile
-                    pygame.draw.rect(self.minimap_surface, color, pygame.Rect(x, y, minimap_tile, minimap_tile))
-            pygame.draw.rect(self.minimap_surface, BLACK, self.minimap_surface.get_rect(), 2)
-            self.minimap_dirty = False
-
-        # Label
-        font = pygame.font.SysFont("Arial", 14)
-        label = font.render("Mini-map", True, (0, 0, 0))
-        # self.screen.blit(label, (minimap_x, minimap_y - 20))
-        label_rect = label.get_rect(center=(minimap_x + minimap_width // 2, minimap_y - 10))
-        self.screen.blit(label, label_rect)
-
-
-        # Blit cached surface
-        self.screen.blit(self.minimap_surface, (minimap_x, minimap_y))
+            if 0 <= x - minimap_x < minimap_size and 0 <= y - minimap_y < minimap_size:
+                pygame.draw.rect(self.screen, color, (x, y, minimap_tile, minimap_tile))
 
     def draw_stats_bar(self):
         screen_w, _ = self.screen.get_size()
