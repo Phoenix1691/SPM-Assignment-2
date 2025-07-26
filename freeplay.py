@@ -196,7 +196,7 @@ class FreePlayGame:
 
     def save_game(self, filename="savegame.pkl"):
         data = {
-            'mode': 'freeplay'
+            'mode': 'freeplay',
             'grid': self.map.grid,
             'turn': self.turn,
             'loss_turns': self.loss_turns,
