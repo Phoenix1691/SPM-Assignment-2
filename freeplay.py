@@ -25,7 +25,14 @@ RED = (255, 0, 0)
 GREEN = (0, 255, 0)
 BLUE = (0, 0, 255)
 
-
+BUILDING_COLORS = {
+    "R": (255, 150, 150),
+    "I": (200, 200, 100),
+    "C": (150, 200, 255),
+    "O": (180, 255, 180),
+    "*": (150, 150, 150),
+    "D": (255, 0, 0)  # Demolish button color
+}
 
 # Constants for buttons
 BUILDING_OPTIONS = ["R", "I", "C", "O", "*", "D"]  # D = Demolish
@@ -213,16 +220,48 @@ def draw_stats(screen, game):
     screen.fill(WHITE, (0, 0, SCREEN_WIDTH, STATS_HEIGHT))
     screen.blit(label, (10, BUTTON_HEIGHT + 10))  # Adjusted Y-position to avoid overlapping buttons
 
+# def draw_building_buttons(screen, selected_building, demolish_mode):
+#     font = pygame.font.SysFont("Arial", 20)
+#     buttons = {}
+#     x_offset = BUTTON_MARGIN
+#     for option in BUILDING_OPTIONS:
+#         color = GRAY
+#         if demolish_mode:
+#             if option == "D":
+#                 color = (255, 100, 100)  # Highlight demolish mode in red
+#         else:
+#             if option == selected_building:
+#                 color = (100, 255, 100)  # Highlight selected building in green
+
+
+#         rect = pygame.Rect(x_offset, BUTTON_Y, BUTTON_WIDTH, BUTTON_HEIGHT)
+#         pygame.draw.rect(screen, color, rect)
+#         pygame.draw.rect(screen, BLACK, rect, 2)  # border
+
+#         label_text = "Demolish" if option == "D" else option
+#         label = font.render(label_text, True, BLACK)
+#         label_rect = label.get_rect(center=rect.center)
+#         screen.blit(label, label_rect)
+
+#         buttons[option] = rect
+#         x_offset += BUTTON_WIDTH + BUTTON_MARGIN
+
+#     return buttons
+
 def draw_building_buttons(screen, selected_building, demolish_mode):
     font = pygame.font.SysFont("Arial", 20)
     buttons = {}
     x_offset = BUTTON_MARGIN
+
     for option in BUILDING_OPTIONS:
+        # Default gray for all buttons
         color = GRAY
-        if option == selected_building:
-            color = (100, 255, 100)  # Light green for selected
-        if option == "D" and demolish_mode:
-            color = (255, 100, 100)  # Light red for demolish mode active
+
+        # Change color only if selected
+        if option == selected_building and not demolish_mode:
+            color = BUILDING_COLORS.get(option, GRAY)
+        elif option == "D" and demolish_mode:
+            color = BUILDING_COLORS["D"]
 
         rect = pygame.Rect(x_offset, BUTTON_Y, BUTTON_WIDTH, BUTTON_HEIGHT)
         pygame.draw.rect(screen, color, rect)
@@ -237,6 +276,8 @@ def draw_building_buttons(screen, selected_building, demolish_mode):
         x_offset += BUTTON_WIDTH + BUTTON_MARGIN
 
     return buttons
+
+
 
 def handle_button_click(pos, buttons, game):
     for option, rect in buttons.items():

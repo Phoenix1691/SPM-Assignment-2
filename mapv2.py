@@ -14,6 +14,10 @@ BUILDING_COLORS = {
 }
 UI_HEIGHT = 90  # or STATS_HEIGHT + BUTTON_HEIGHT + margin
 
+MINIMAP_WIDTH_BUFFER = 220  # Width reserved on the right for minimap + label
+MINIMAP_MARGIN = 10
+
+
 class Map:
     def __init__(self, game_mode, grid_size, screen=None):
         self.game_mode = game_mode
@@ -46,7 +50,10 @@ class Map:
         # Adjust tile size to fit screen minus stats bar
         max_tile_size = 64
         usable_h = screen_h - self.stats_bar_height
-        self.tile_size = max(16, min(max_tile_size, screen_w // self.grid_size, usable_h // self.grid_size))
+        # self.tile_size = max(16, min(max_tile_size, screen_w // self.grid_size, usable_h // self.grid_size))
+        usable_w = screen_w - MINIMAP_WIDTH_BUFFER
+        self.tile_size = max(16, min(max_tile_size, usable_w // self.grid_size, usable_h // self.grid_size))
+
         self.fixed_grid_pixel_size = self.tile_size * self.grid_size
 
         # Only create screen if not already provided
@@ -61,13 +68,19 @@ class Map:
         print(f"Tile size: {self.tile_size}")
 
 
+    # def update_margins(self):
+    #     screen_w, screen_h = self.screen.get_size()
+    #     available_h = screen_h - UI_HEIGHT
+    #     self.left_margin = (screen_w - self.grid_size * self.tile_size) // 2
+    #     self.top_margin = self.stats_bar_height + (available_h - self.grid_size * self.tile_size) // 2
+
     def update_margins(self):
         screen_w, screen_h = self.screen.get_size()
+        available_w = screen_w - MINIMAP_WIDTH_BUFFER  # Reserve space for minimap
         available_h = screen_h - UI_HEIGHT
-        self.left_margin = (screen_w - self.grid_size * self.tile_size) // 2
+
+        self.left_margin = (available_w - self.grid_size * self.tile_size) // 2
         self.top_margin = self.stats_bar_height + (available_h - self.grid_size * self.tile_size) // 2
-
-
 
     def attempt_place_building(self, pos, building_type):
         x, y = pos
@@ -148,7 +161,10 @@ class Map:
         # Label
         font = pygame.font.SysFont("Arial", 14)
         label = font.render("Mini-map", True, (0, 0, 0))
-        self.screen.blit(label, (minimap_x, minimap_y - 20))
+        # self.screen.blit(label, (minimap_x, minimap_y - 20))
+        label_rect = label.get_rect(center=(minimap_x + minimap_width // 2, minimap_y - 10))
+        self.screen.blit(label, label_rect)
+
 
         # Blit cached surface
         self.screen.blit(self.minimap_surface, (minimap_x, minimap_y))
