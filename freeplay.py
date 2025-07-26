@@ -90,11 +90,13 @@ class FreePlayGame:
                         success, msg = self.demolish_building(pos)
                         if success:
                             self.turn += 1
+                            self.next_turn()
                         self.show_message(msg)
                     else:
                         success, msg = self.place_building(pos)
                         if success:
                             self.turn += 1
+                            self.next_turn()
                         self.show_message(msg)
 
             if self.is_game_over():
