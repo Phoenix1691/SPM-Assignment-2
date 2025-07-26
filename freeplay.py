@@ -49,6 +49,7 @@ class FreePlayGame:
     def __init__(self, screen):
         # self.map = Map(grid_size=5, screen_width=SCREEN_WIDTH, stats_display_height=STATS_HEIGHT)
         # self.map = Map("freeplay", grid_size=5, screen_width=SCREEN_WIDTH, stats_display_height=STATS_HEIGHT)
+        self.screen = screen
         self.map = Map("freeplay", grid_size=5, screen=screen)
         self.map.initialize_screen()
         self.turn = 0
