@@ -105,7 +105,7 @@ class FreePlayGame:
                 self.screen.blit(label, (100, SCREEN_HEIGHT // 2))
                 pygame.display.flip()
                 pygame.time.wait(3000)
-                pygame.quit()
+                main_menu()
                 return
 
             pygame.display.flip()
