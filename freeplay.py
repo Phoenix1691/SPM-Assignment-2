@@ -322,6 +322,8 @@ class FreePlayGame:
     def show_message(self, msg, duration=120):
         self.message = msg
         self.message_timer = duration
+    def run(self):
+        self.main()
 
 
 
