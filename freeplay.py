@@ -207,6 +207,13 @@ class FreePlayGame:
         self.show_message("Game saved successfully!")
         return True
 
+    
+    def load_data(self, data):
+        self.map.grid = data['grid']
+        self.turn = data['turn']
+        self.loss_turns = data['loss_turns']
+        self.score = data['score']
+
     def show_message(self, msg, duration=120):
         self.message = msg
         self.message_timer = duration
