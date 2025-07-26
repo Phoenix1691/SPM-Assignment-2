@@ -27,7 +27,7 @@ def draw_text_center(screen, text, rect, font, color=WHITE):
     text_rect = text_surface.get_rect(center=rect.center)
     screen.blit(text_surface, text_rect)
 
-def load_saved_game(filename="savegame.pkl"):
+def load_saved_game(screen,filename="savegame.pkl"):
     try:
         with open(filename, 'rb') as f:
             data = pickle.load(f)
