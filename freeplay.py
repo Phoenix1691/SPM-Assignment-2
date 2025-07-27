@@ -13,8 +13,7 @@ import pygame
 import os
 import pickle
 from mapv2 import Map  # Your mapv2.py with Map class
-
-
+from ui_utils import draw_button
 
 SCREEN_WIDTH = 800
 SCREEN_HEIGHT = 650
@@ -48,8 +47,6 @@ UI_HEIGHT = STATS_HEIGHT + BUTTON_HEIGHT + 20  # Add padding
 
 class FreePlayGame:
     def __init__(self, screen):
-        # self.map = Map(grid_size=5, screen_width=SCREEN_WIDTH, stats_display_height=STATS_HEIGHT)
-        # self.map = Map("freeplay", grid_size=5, screen_width=SCREEN_WIDTH, stats_display_height=STATS_HEIGHT)
         self.screen = screen
         self.map = Map("freeplay", grid_size=5, screen=screen)
         self.map.initialize_screen()
@@ -99,6 +96,10 @@ class FreePlayGame:
                             self.turn += 1
                             self.next_turn()
                         self.show_message(msg)
+                # elif event.type == pygame.KEYDOWN:
+                #     if event.key == pygame.K_ESCAPE:
+                #         pygame.quit()
+                #         return
 
             if self.is_game_over():
                 from mainMenu import main_menu
@@ -158,13 +159,15 @@ class FreePlayGame:
                 color = BUILDING_COLORS.get(option, GRAY)
 
             rect = pygame.Rect(x_offset, BUTTON_Y, BUTTON_WIDTH, BUTTON_HEIGHT)
-            pygame.draw.rect(self.screen, color, rect)
-            pygame.draw.rect(self.screen, BLACK, rect, 2)
+            # pygame.draw.rect(self.screen, color, rect)
+            # pygame.draw.rect(self.screen, BLACK, rect, 2)
 
             label_text = option if option != "D" else "Demolish"
             label = font.render(label_text, True, BLACK)
             label_rect = label.get_rect(center=rect.center)
-            self.screen.blit(label, label_rect)
+            # self.screen.blit(label, label_rect)
+            draw_button(self.screen, rect, label_text, font, color)
+
 
             buttons[option] = rect
             x_offset += BUTTON_WIDTH + BUTTON_MARGIN
@@ -337,38 +340,6 @@ class FreePlayGame:
         self.message_timer = duration
     def run(self):
         self.main()
-
-
-
-# def draw_building_buttons(screen, selected_building, demolish_mode):
-#     font = pygame.font.SysFont("Arial", 20)
-#     buttons = {}
-#     x_offset = BUTTON_MARGIN
-#     for option in BUILDING_OPTIONS:
-#         color = GRAY
-#         if demolish_mode:
-#             if option == "D":
-#                 color = (255, 100, 100)  # Highlight demolish mode in red
-#         else:
-#             if option == selected_building:
-#                 color = (100, 255, 100)  # Highlight selected building in green
-
-
-#         rect = pygame.Rect(x_offset, BUTTON_Y, BUTTON_WIDTH, BUTTON_HEIGHT)
-#         pygame.draw.rect(screen, color, rect)
-#         pygame.draw.rect(screen, BLACK, rect, 2)  # border
-
-#         label_text = "Demolish" if option == "D" else option
-#         label = font.render(label_text, True, BLACK)
-#         label_rect = label.get_rect(center=rect.center)
-#         screen.blit(label, label_rect)
-
-#         buttons[option] = rect
-#         x_offset += BUTTON_WIDTH + BUTTON_MARGIN
-
-#     return buttons
-
-
 
 if __name__ == "__main__":
     pygame.init()

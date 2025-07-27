@@ -12,10 +12,11 @@ BUILDING_COLORS = {
     "O": (180, 255, 180),
     "*": (150, 150, 150)
 }
-UI_HEIGHT = 90  # or STATS_HEIGHT + BUTTON_HEIGHT + margin
 
 MINIMAP_WIDTH_BUFFER = 220  # Width reserved on the right for minimap + label
 MINIMAP_MARGIN = 10
+STATS_HEIGHT = 90  # Same as UI_HEIGHT
+UI_HEIGHT = STATS_HEIGHT
 
 
 class Map:
@@ -28,12 +29,12 @@ class Map:
         self.first_turn = True
         self.tile_size = 0  # To be set during screen init
         self.fixed_grid_pixel_size = 800
-        self.top_margin = 0
+        self.top_margin = STATS_HEIGHT  # so grid starts below stats bar
         self.left_margin = 0
         self.dirty_tiles = set()
         self.minimap_surface = None
         self.minimap_dirty = True
-        self.stats_bar_height = 100
+        self.stats_bar_height = STATS_HEIGHT
         # self.screen = screen
 
 
@@ -58,7 +59,9 @@ class Map:
 
         # Only create screen if not already provided
         if self.screen is None:
-            self.screen = pygame.display.set_mode((screen_w, screen_h), pygame.RESIZABLE)
+            # self.screen = pygame.display.set_mode((screen_w, screen_h), pygame.RESIZABLE)
+            self.screen = pygame.display.set_mode((screen_w, screen_h), pygame.FULLSCREEN)
+
 
         pygame.display.set_caption("Ngee Ann City")
 
@@ -80,7 +83,7 @@ class Map:
         available_h = screen_h - UI_HEIGHT
 
         self.left_margin = (available_w - self.grid_size * self.tile_size) // 2
-        self.top_margin = self.stats_bar_height + (available_h - self.grid_size * self.tile_size) // 2
+        self.top_margin = self.stats_bar_height + 30  # 30px space for messages
 
     def attempt_place_building(self, pos, building_type):
         x, y = pos

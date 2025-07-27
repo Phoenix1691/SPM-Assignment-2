@@ -10,9 +10,9 @@ import pygame
 import random
 import pickle
 from mapv2 import Map  # Ensure mapv2.py with Map class is in the same folder
+from mapv2 import STATS_HEIGHT
+from ui_utils import draw_button  # Assuming you place it in ui_utils.py
 
-SCREEN_WIDTH = 800
-STATS_HEIGHT = 80
 GRID_SIZE = 20
 
 BUILDINGS = ['R', 'I', 'C', 'O', '*']
@@ -33,10 +33,9 @@ def get_building_class(type_identifier):
 
 class ArcadeGame:
     def __init__(self):
-        # self.map = Map(GRID_SIZE, SCREEN_WIDTH, STATS_HEIGHT)
-        # self.map = Map("arcade", GRID_SIZE, SCREEN_WIDTH, STATS_HEIGHT)
         self.map = Map("arcade", GRID_SIZE)
         self.map.initialize_screen()
+        self.map.screen.get_width()
         self.turn = 0
         self.coins = 16
         self.score = 0
@@ -166,24 +165,22 @@ class ArcadeGame:
         while True:
             self.map.draw()
             draw_stats(self.map.screen, self)
+            pygame.draw.line(self.map.screen, (100, 100, 100), (0, STATS_HEIGHT), (self.map.screen.get_width(), STATS_HEIGHT), 1)
+            draw_button(self.map.screen, button1, self.building_choices[0], font, (180, 180, 255))
+            draw_button(self.map.screen, button2, self.building_choices[1], font, (180, 180, 255))
+            draw_button(self.map.screen, demolish_btn, "Demolish", font, (255, 180, 180))
+            draw_button(self.map.screen, save_btn, "Save", font, (180, 255, 180))
+            draw_button(self.map.screen, main_menu_btn, "Main Menu", font, (200, 200, 200))
 
-            pygame.draw.rect(self.map.screen, (180, 180, 255), button1)
-            pygame.draw.rect(self.map.screen, (180, 180, 255), button2)
-            pygame.draw.rect(self.map.screen, (255, 180, 180), demolish_btn)
-            pygame.draw.rect(self.map.screen, (180, 255, 180), save_btn)
+            # Clear the message area first
+            message_area_rect = pygame.Rect(0, STATS_HEIGHT, self.map.screen.get_width(), 30)
+            pygame.draw.rect(self.map.screen, (230, 230, 230), message_area_rect)
 
-            pygame.draw.rect(self.map.screen, (200, 200, 200), main_menu_btn)
-            pygame.draw.rect(self.map.screen, (0, 0, 0), main_menu_btn, 2)
-            self.map.screen.blit(font.render("Main Menu", True, (0, 0, 0)), main_menu_btn.move(40, 5))
-
-            self.map.screen.blit(font.render(self.building_choices[0], True, (0, 0, 0)), button1.move(10, 5))
-            self.map.screen.blit(font.render(self.building_choices[1], True, (0, 0, 0)), button2.move(10, 5))
-            self.map.screen.blit(font.render("Demolish", True, (0, 0, 0)), demolish_btn.move(5, 5))
-            self.map.screen.blit(font.render("Save", True, (0, 0, 0)), save_btn.move(10, 5))
-
+            # Inside stats bar
             if message:
-                msg_surface = font.render(message, True, (255, 0, 0))
-                self.map.screen.blit(msg_surface, (10, STATS_HEIGHT + 5))
+                msg_surface = font.render(message, True, (100, 0, 0))
+                self.map.screen.blit(msg_surface, (10, STATS_HEIGHT - 25))  # Higher position
+
 
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
@@ -221,11 +218,16 @@ class ArcadeGame:
                             if success:
                                 placing_building = None
                         message = msg
+                # elif event.type == pygame.KEYDOWN:
+                #     if event.key == pygame.K_ESCAPE:
+                #         pygame.quit()
+                #         return
+
 
             if self.game_over:
                 font = pygame.font.SysFont("Arial", 40)
                 text_surface = font.render(f"Game Over! Final Score: {self.score}", True, (255, 0, 0))
-                text_rect = text_surface.get_rect(center=(SCREEN_WIDTH // 2, self.map.screen.get_height() // 2))
+                text_rect = text_surface.get_rect(center=(self.map.screen.get_width() // 2, self.map.screen.get_height() // 2))
                 self.map.screen.blit(text_surface, text_rect)
                 pygame.display.flip()
                 pygame.time.wait(3000)
@@ -239,7 +241,7 @@ class ArcadeGame:
 
 def draw_stats(screen, game):
     font = pygame.font.SysFont("Arial", 24)
-    screen.fill((230, 230, 230), (0, 0, SCREEN_WIDTH, STATS_HEIGHT))
+    screen.fill((230, 230, 230), (0, 0, screen.get_width(), STATS_HEIGHT))
     screen.blit(font.render(f"Turn: {game.turn}", True, (0, 0, 0)), (10, 10))
     screen.blit(font.render(f"Coins: {game.coins}", True, (0, 0, 0)), (150, 10))
     screen.blit(font.render(f"Score: {game.score}", True, (0, 0, 0)), (300, 10))
