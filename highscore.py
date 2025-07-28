@@ -38,10 +38,3 @@ def get_top_scores(mode, limit=10):
     sorted_scores = sorted(filtered, key=lambda x: x["score"], reverse=True)
     return sorted_scores[:limit]
 
-# Save a score
-save_highscore("Keshav", 210, "Freeplay")
-
-# Get top 10 arcade scores
-top_arcade = get_top_scores("Arcade")
-for rank, entry in enumerate(top_arcade, 1):
-    print(f"{rank}. {entry['name']} - {entry['score']}")
