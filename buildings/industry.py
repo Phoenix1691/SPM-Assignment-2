@@ -1,4 +1,5 @@
 # industry.py - Industry building class for the city-building game
+'''
 from buildings.building_parent import Building
 
 class industry(Building):
@@ -26,3 +27,36 @@ class industry(Building):
         # Industry scores based on adjacent residential buildings
         score += adjacent_buildings.get("R", 0)
         return score
+'''
+from buildings.building_parent import Building
+
+class industry(Building):
+    def __init__(self):
+        super().__init__()
+        self.type = "Industry"
+        self.size = (1, 1)
+        self.color = (128, 128, 128)  # Gray color for industry buildings
+        self.adjacency = {
+            "R": 1,  # In Arcade, each adjacent Residential gives 1 coin
+        }
+        self.type_identifier = "I"
+        self.profit = 2  # Used in Freeplay
+        self.upkeep = 1  # Only used in Freeplay
+
+    def calculate_profit_and_upkeep(self, adjacent_buildings, mode="freeplay"):
+        if mode == "freeplay":
+            profit = self.profit
+            upkeep = self.upkeep
+            net_profit = profit - upkeep
+        elif mode == "arcade":
+            profit = adjacent_buildings.get("R", 0)
+            upkeep = 0
+            net_profit = profit
+        else:
+            raise ValueError("Mode must be 'freeplay' or 'arcade'")
+
+        return net_profit, upkeep
+
+    def score(self, grid):
+        # Each Industry scores 1 point in both modes
+        return sum(1 for row in grid for cell in row if cell and cell.type_identifier == "I")
