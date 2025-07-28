@@ -1,4 +1,5 @@
 # buildings/residential.py - Residential building class for the city-building game
+'''
 from buildings.building_parent import Building
 
 class park(Building):
@@ -24,4 +25,34 @@ class park(Building):
         score = 0
         # Parks score based on adjacency to other parks
         score += adjacent_buildings.get("O", 0)
+        return score
+'''
+from buildings.building_parent import Building
+
+class park(Building):
+    def __init__(self):
+        self.type = "Park"
+        self.size = (1, 1)
+        self.color = (0, 255, 0)  # Green color for park buildings
+        self.type_identifier = "O"
+        self.upkeep = 1  # Only relevant for freeplay
+        self.adjacency = {
+            "O": 1,  # Adjacent parks
+        }
+
+    # Calculate profit and upkeep based on mode
+    def calculate_profit_and_upkeep(self, mode="freeplay", adjacent_buildings=None):
+        if mode == "freeplay":
+            profit = 0
+            upkeep = self.upkeep
+        elif mode == "arcade":
+            profit = 0
+            upkeep = 0  # No upkeep in arcade mode
+        else:
+            raise ValueError("Mode must be 'freeplay' or 'arcade'")
+        return profit, upkeep
+
+    # Score 1 point per adjacent park (arcade mode)
+    def score(self, adjacent_buildings):
+        score = adjacent_buildings.get("O", 0)
         return score
