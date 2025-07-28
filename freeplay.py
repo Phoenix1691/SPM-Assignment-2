@@ -23,6 +23,7 @@ from buildings.road import road
 
 
 
+
 SCREEN_WIDTH = 800
 SCREEN_HEIGHT = 650
 STATS_HEIGHT = 50
@@ -75,7 +76,7 @@ class FreePlayGame:
         while True:
             self.screen.fill(WHITE)
             self.map.draw()
-            self.draw_stats()
+            self.draw_stats()            
             buttons = self.draw_building_buttons()
 
             font = pygame.font.SysFont("Arial", 18)
@@ -166,14 +167,34 @@ class FreePlayGame:
 
     def draw_stats(self):
         font = pygame.font.SysFont("Arial", 20)
-        pygame.draw.rect(self.screen, WHITE, (0, 0, SCREEN_WIDTH, STATS_HEIGHT))
         profit, upkeep = self.calculate_profit_and_upkeep()
         net = profit - upkeep
         mode = "Demolish" if self.demolish_mode else self.selected_building
         stats = f"Turn: {self.turn} | Score: {self.score} | Profit: {profit} | Upkeep: {upkeep} | Net: {net} | Mode: {mode}"
-        label = font.render(stats, True, BLACK)
+
         self.screen.fill(WHITE, (0, 0, SCREEN_WIDTH, STATS_HEIGHT))
+        label = font.render(stats, True, BLACK)
         self.screen.blit(label, (10, BUTTON_HEIGHT + 10))
+
+        # Legend displayed left-to-right
+        legend_items_row1 = [("R", "Residential"), ("I", "Industry"), ("C", "Commercial")]
+        legend_items_row2 = [("O", "Park"), ("*", "Road")]
+
+        font_small = pygame.font.SysFont("Arial", 18)
+        x_start = self.screen.get_width() - 400
+        y_start = 10
+        spacing = 130
+
+        for i, (symbol, label) in enumerate(legend_items_row1):
+            text = font_small.render(f"{symbol}: {label}", True, BLACK)
+            self.screen.blit(text, (x_start + i * spacing, y_start))
+
+        for i, (symbol, label) in enumerate(legend_items_row2):
+            text = font_small.render(f"{symbol}: {label}", True, BLACK)
+            self.screen.blit(text, (x_start + i * spacing, y_start + 22))
+
+        
+
 
     def draw_building_buttons(self):
         font = pygame.font.SysFont("Arial", 20)

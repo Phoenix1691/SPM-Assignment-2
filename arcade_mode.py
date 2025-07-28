@@ -14,7 +14,16 @@ from mapv2 import STATS_HEIGHT
 from ui_utils import draw_button  # Assuming you place it in ui_utils.py
 from highscore import save_highscore
 from ui_utils import get_player_name  # or wherever you put the function
+from ui_utils import draw_legend
 from tutorial import show_legend_and_tutorial
+
+LEGEND_ITEMS = {
+    "R": "Residential",
+    "I": "Industry",
+    "C": "Commercial",
+    "O": "Park",
+    "*": "Road"
+}
 
 
 GRID_SIZE = 20
@@ -165,7 +174,10 @@ class ArcadeGame:
         clock = pygame.time.Clock()
         font = pygame.font.SysFont("Arial", 20)
         
-        screen = pygame.display.set_mode((800, 600), pygame.RESIZABLE)
+        infoObject = pygame.display.Info()
+        WIDTH, HEIGHT = infoObject.current_w, infoObject.current_h
+        screen = pygame.display.set_mode((WIDTH, HEIGHT), pygame.FULLSCREEN)
+
         self.map.screen = screen
 
         placing_building = None
@@ -270,6 +282,23 @@ def draw_stats(screen, game):
     screen.blit(font.render(f"Turn: {game.turn}", True, (0, 0, 0)), (10, 10))
     screen.blit(font.render(f"Coins: {game.coins}", True, (0, 0, 0)), (150, 10))
     screen.blit(font.render(f"Score: {game.score}", True, (0, 0, 0)), (300, 10))
+
+    # Legend displayed left-to-right
+    legend_items_row1 = [("R", "Residential"), ("I", "Industry"), ("C", "Commercial")]
+    legend_items_row2 = [("O", "Park"), ("*", "Road")]
+
+    font_small = pygame.font.SysFont("Arial", 20)
+    x_start = screen.get_width() - 400
+    y_start = 10
+    spacing = 130
+
+    for i, (symbol, label) in enumerate(legend_items_row1):
+        text = font_small.render(f"{symbol}: {label}", True, (0, 0, 0))
+        screen.blit(text, (x_start + i * spacing, y_start))
+
+    for i, (symbol, label) in enumerate(legend_items_row2):
+        text = font_small.render(f"{symbol}: {label}", True, (0, 0, 0))
+        screen.blit(text, (x_start + i * spacing, y_start + 25))
 
 def main():
     game = ArcadeGame()

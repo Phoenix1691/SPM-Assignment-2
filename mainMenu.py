@@ -130,8 +130,13 @@ def main_menu():
                         if text == "Start New Arcade Game":
                             arcade_main()  # assumes arcade_main() manages its own loop and returns here when done
                         elif text == "Start New Free Play Game":
-                            game = FreePlayGame(screen)
-                            game.run()  # run game loop; returns here after game over or exit
+                            # Create fullscreen screen for Freeplay
+                            fullscreen_screen = pygame.display.set_mode((0, 0), pygame.FULLSCREEN)
+                            game = FreePlayGame(fullscreen_screen)
+                            game.run()
+                            # After game ends, recreate main menu screen if needed:
+                            screen = pygame.display.set_mode((800, 600), pygame.RESIZABLE)
+
                         elif text == "Load Saved Game":
                             game = load_saved_game(screen)
                             if game:

@@ -49,3 +49,19 @@ def get_player_name(screen):
 
         pygame.display.flip()
         clock.tick(30)
+def draw_legend(screen, font):
+    legend_x = screen.get_width() - 250
+    legend_y = 10
+    line_height = 20
+    legend_items = [
+        ("R", "Residential"),
+        ("I", "Industry"),
+        ("C", "Commercial"),
+        ("O", "Park"),
+        ("*", "Road"),
+    ]
+
+    pygame.draw.rect(screen, (255, 255, 255), (legend_x - 10, legend_y - 5, 240, len(legend_items) * line_height + 10))
+    for i, (symbol, label) in enumerate(legend_items):
+        text = font.render(f"{symbol}: {label}", True, (0, 0, 0))
+        screen.blit(text, (legend_x, legend_y + i * line_height))
