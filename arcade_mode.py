@@ -177,6 +177,9 @@ class ArcadeGame:
             draw_button(self.map.screen, save_btn, "Save", font, (180, 255, 180))
             draw_button(self.map.screen, main_menu_btn, "Main Menu", font, (200, 200, 200))
 
+            font = pygame.font.SysFont("Arial", 18)
+            draw_legend(self.screen, font)
+
             # Clear the message area first
             message_area_rect = pygame.Rect(0, STATS_HEIGHT, self.map.screen.get_width(), 30)
             pygame.draw.rect(self.map.screen, (230, 230, 230), message_area_rect)
@@ -257,6 +260,32 @@ def draw_stats(screen, game):
 def main():
     game = ArcadeGame()
     game.run()
+
+def draw_legend(screen, font):
+    # Background box for the legend at bottom of screen
+    legend_rect = pygame.Rect(10, 520, 300, 200)
+    pygame.draw.rect(screen, (240, 240, 240), legend_rect)
+    pygame.draw.rect(screen, (0, 0, 0), legend_rect, 2)  # border
+
+    # Title
+    title_surf = font.render("Legend - Building Types", True, (0, 0, 0))
+    screen.blit(title_surf, (legend_rect.x + 10, legend_rect.y + 5))
+
+    # Lines to display (no need to describe "R - Residential" since you said it's clear)
+    lines = [
+        "R - Residential",
+        "I - Industry",
+        "C - Commercial",
+        "O - Park",
+        "* - Road"
+    ]
+
+    y = legend_rect.y + 35
+    for line in lines:
+        line_surf = font.render(line, True, (0, 0, 0))
+        screen.blit(line_surf, (legend_rect.x + 10, y))
+        y += 25
+
     
 
 if __name__ == "__main__":
