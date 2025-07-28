@@ -201,9 +201,6 @@ class ArcadeGame:
                 elif event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
                     pos = event.pos
                     if main_menu_btn.collidepoint(pos):
-                        pygame.quit()
-                        from mainMenu import main_menu
-                        main_menu()
                         return
                     elif button1.collidepoint(pos):
                         placing_building = self.building_choices[0]
@@ -297,4 +294,5 @@ def draw_legend(screen, font):
     
 
 if __name__ == "__main__":
-    main()
+    while True:
+        main()  # loop back to main menu every time the game ends
