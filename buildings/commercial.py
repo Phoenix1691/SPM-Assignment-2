@@ -23,6 +23,10 @@ class commercial (Building):
         score += adjacent_buildings.get("C", 0)
         score += adjacent_buildings.get("R", 0)
         return score
+        
+    def calculate_arcade_coins(self, adjacent_buildings):
+        # Arcade mode: +1 coin per adjacent Residential (R)
+        return adjacent_buildings.get("R", 0)
 
 
 # 1 point per commercial, 1 point per residential
