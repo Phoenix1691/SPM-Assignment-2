@@ -272,7 +272,7 @@ def draw_legend(screen, font):
     pygame.draw.rect(screen, (0, 0, 0), legend_rect, 2)  # border
 
     # Display one line of legend text
-    legend_text = "Legend: Press H to see more details"
+    legend_text = "Press H to see more details"
     text_surf = font.render(legend_text, True, (0, 0, 0))
     screen.blit(text_surf, (legend_rect.x + 10, legend_rect.y + 15))
 
