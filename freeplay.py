@@ -355,18 +355,19 @@ class FreePlayGame:
 
 def draw_legend(screen, font):
     # Background box for the legend at bottom of screen
-    legend_rect = pygame.Rect(10, 490, 780, 130)  # Adjust position and size if needed
+    legend_rect = pygame.Rect(10, 520, 600, 90)
     pygame.draw.rect(screen, (240, 240, 240), legend_rect)
     pygame.draw.rect(screen, (0, 0, 0), legend_rect, 2)  # border
 
     # Title
-    title_surf = font.render("Legend - Building Types & Scoring", True, (0, 0, 0))
+    title_surf = font.render("Legend - Building Types", True, (0, 0, 0))
     screen.blit(title_surf, (legend_rect.x + 10, legend_rect.y + 5))
 
     # Lines to display (no need to describe "R - Residential" since you said it's clear)
     lines = [
         "R - Residential",
         "I - Industry",
+        "C - Commercial",
         "O - Park",
         "* - Road"
     ]
