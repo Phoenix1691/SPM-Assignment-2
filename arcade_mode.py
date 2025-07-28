@@ -178,7 +178,7 @@ class ArcadeGame:
             draw_button(self.map.screen, main_menu_btn, "Main Menu", font, (200, 200, 200))
 
             font = pygame.font.SysFont("Arial", 18)
-            draw_legend(self.screen, font)
+            draw_legend(self.map.screen, font)
 
             # Clear the message area first
             message_area_rect = pygame.Rect(0, STATS_HEIGHT, self.map.screen.get_width(), 30)
