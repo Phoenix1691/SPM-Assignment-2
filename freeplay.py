@@ -355,7 +355,7 @@ class FreePlayGame:
 
 def draw_legend(screen, font):
     # Background box for the legend at bottom of screen
-    legend_rect = pygame.Rect(10, 520, 600, 90)
+    legend_rect = pygame.Rect(10, 520, 300, 200)
     pygame.draw.rect(screen, (240, 240, 240), legend_rect)
     pygame.draw.rect(screen, (0, 0, 0), legend_rect, 2)  # border
 
