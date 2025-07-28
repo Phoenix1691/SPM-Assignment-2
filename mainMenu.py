@@ -103,7 +103,7 @@ def load_saved_game(screen,filename="savegame.pkl"):
 
 def main_menu():
     pygame.init()
-    screen = pygame.display.set_mode((800, 600))
+    screen = pygame.display.set_mode((800, 600), pygame.RESIZABLE)
     # screen_info = pygame.display.Info()
     # screen = pygame.display.set_mode((screen_info.current_w, screen_info.current_h), pygame.FULLSCREEN)
     pygame.display.set_caption("Main Menu")
