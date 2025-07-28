@@ -15,6 +15,12 @@ import pickle
 from mapv2 import Map  # Your mapv2.py with Map class
 from ui_utils import draw_button
 from tutorial import show_legend_and_tutorial
+from buildings.residential import residential
+from buildings.industry import industry
+from buildings.commercial import commercial
+from buildings.park import park
+from buildings.road import road
+
 
 
 SCREEN_WIDTH = 800
@@ -111,7 +117,7 @@ class FreePlayGame:
                     elif event.key == pygame.K_h:
                         show_tutorial = not show_tutorial
                         if show_tutorial:
-                            show_legend_and_tutorial(self.screen)
+                            show_legend_and_tutorial(self.screen, "freeplay")
 
                 # elif event.type == pygame.KEYDOWN:
                 #     if event.key == pygame.K_ESCAPE:
@@ -206,59 +212,45 @@ class FreePlayGame:
         cols = [pos[1] for pos in self.map.grid.keys()]
         return min(rows), max(rows), min(cols), max(cols)
 
-    def get_adjacent(self, row, col):
+    def get_adjacent(self, row, col): #i dont know if this is necessary
         adj = []
         for dx, dy in [(-1,0),(1,0),(0,-1),(0,1)]:
             r, c = row + dy, col + dx
             adj.append(self.map.grid.get((r, c), "."))
         return adj
+    
+    def get_adjacent_buildings_counts(self, row, col):
+        counts = {}
+        for dy, dx in [(-1, 0), (1, 0), (0, -1), (0, 1)]:
+            neighbor = self.map.grid.get((row + dy, col + dx))
+            if neighbor:
+                key = getattr(neighbor, "type_identifier", None)
+                if key:
+                    counts[key] = counts.get(key, 0) + 1
+        return counts
+
 
     def calculate_profit_and_upkeep(self):
-        profit, upkeep = 0, 0
+        profit = 0
+        upkeep = 0
+        visited = set()  # Shared set for cluster detection
 
-        # Check profit and upkeep for each building type
-        for (row, col), cell in self.map.grid.items():
-            if cell == "R":
-                profit += 1
-            elif cell == "I":
-                profit += 2
-                upkeep += 1
-            elif cell == "C":
-                profit += 3
-                upkeep += 2
-            elif cell == "O":
-                upkeep += 1
-            elif cell == "*":
-                # Road upkeep: cost if no adjacent road segment
-                connected = False
-                for dx, dy in [(-1,0),(1,0),(0,-1),(0,1)]:
-                    adj_cell = self.map.grid.get((row + dy, col + dx))
-                    if adj_cell == "*":
-                        connected = True
-                        break
-                if not connected:
-                    upkeep += 1
-
-        # Residential cluster upkeep: 1 coin per cluster of connected R's
-        visited = set()
-        def dfs(r, c):
-            stack = [(r, c)]
-            while stack:
-                rr, cc = stack.pop()
-                if (rr, cc) in visited:
-                    continue
-                visited.add((rr, cc))
-                for dx, dy in [(-1,0),(1,0),(0,-1),(0,1)]:
-                    nr, nc = rr + dy, cc + dx
-                    if self.map.grid.get((nr, nc)) == "R" and (nr, nc) not in visited:
-                        stack.append((nr, nc))
-
-        for (row, col), cell in self.map.grid.items():
-            if cell == "R" and (row, col) not in visited:
-                dfs(row, col)
-                upkeep += 1
+        for (row, col), building in self.map.grid.items():
+            if building.type_identifier == "R":
+                if (row, col) not in visited:
+                    p, u = building.calculate_profit_and_upkeep(self.map.grid, row, col, mode="freeplay", visited=visited)
+                    profit += p
+                    upkeep += u
+            else:
+                p, u = building.calculate_profit_and_upkeep(self.map.grid, row, col, mode="freeplay")
+                profit += p
+                upkeep += u
 
         return profit, upkeep
+
+
+
+
 
     def calculate_score(self):
         score = 0
@@ -266,23 +258,12 @@ class FreePlayGame:
 
         for row in range(min_row, max_row + 1):
             for col in range(min_col, max_col + 1):
-                cell = self.map.grid.get((row, col), ".")
-                adj = self.get_adjacent(row, col)
-                if cell == "R":
-                    if "I" in adj:
-                        score += 1
-                    else:
-                        score += adj.count("R") + adj.count("C") + 2 * adj.count("O")
-                elif cell == "I":
-                    score += 0
-                elif cell == "C":
-                    score += adj.count("C")
-                elif cell == "O":
-                    score += adj.count("O")
-                elif cell == "*":
-                    score += 1
-        score += sum(1 for b in self.map.grid.values() if b == "I")
+                building = self.map.grid.get((row, col))
+                if building:
+                    adjacent_buildings = self.get_adjacent_buildings_counts(row, col)
+                    score += building.score(adjacent_buildings)
         return score
+
 
     def place_building(self, pos):
         if self.demolish_mode:
@@ -293,20 +274,33 @@ class FreePlayGame:
         col = (x - self.map.left_margin) // self.map.tile_size
         if row < 0 or col < 0 or row >= self.map.grid_size or col >= self.map.grid_size:
             return False, "Invalid placement."
-        if (row, col) not in self.map.grid:
-            self.map.grid[(row, col)] = self.selected_building
 
-            if self.map.is_on_border(row, col):
-                self.map.expand_grid()
-
-            self.turn += 1
-            self.score = self.calculate_score()
-            self.map.first_turn = False
-            return True, "Building placed."
-        else:
+        if (row, col) in self.map.grid:
             return False, "Cell already occupied."
 
+        building_class_map = {
+            "R": residential,
+            "I": industry,
+            "C": commercial,
+            "O": park,
+            "*": road
+        }
+        if self.selected_building not in building_class_map:
+            return False, f"Unknown building type: {self.selected_building}"
 
+        building_instance = building_class_map[self.selected_building]()
+        building_instance.row = row  # store position in building instance
+        building_instance.col = col
+
+        self.map.grid[(row, col)] = building_instance
+
+        if self.map.is_on_border(row, col):
+            self.map.expand_grid()
+
+        self.turn += 1
+        self.score = self.calculate_score()
+        self.map.first_turn = False
+        return True, "Building placed."
     
     def demolish_building(self, pos):
         x, y = pos
@@ -320,6 +314,7 @@ class FreePlayGame:
             self.score = self.calculate_score()
             return True, "Building demolished."
         return False, "No building to demolish here."
+
 
     def next_turn(self):
         profit, upkeep = self.calculate_profit_and_upkeep()

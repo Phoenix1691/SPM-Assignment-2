@@ -1,12 +1,16 @@
-# File: main.py
-# main.py - Main entry point for the game
+    grid = make_grid(test["grid"])
+        profit = 0
+        upkeep = 0
+        visited = set()  # shared visited set for cluster tracking
 
-import pygame
-import sys
-import mainMenu
+        for (r, c), b in grid.items():
+            # Pass visited only for residential to avoid issues:
+            if hasattr(b, 'type_identifier') and b.type_identifier == 'R':
+                p, u = b.calculate_profit_and_upkeep(grid, r, c, mode="freeplay", visited=visited)
+            else:
+                p, u = b.calculate_profit_and_upkeep(grid, r, c, mode="freeplay")
+            profit += p
+            upkeep += u
 
-pygame.init()
-pygame.font.init()
-
-while (True):
-    mainMenu.main_menu()  # Call the main menu function from mainMenu.py
+        print(f"{test['desc']}: Profit = {profit}, Upkeep = {upkeep}, Expected = {test['expected']}")
+        assert (profit, upkeep) == test["expected"], f"FAILED: {test['desc']}"

@@ -106,8 +106,13 @@ class ArcadeGame:
         if not building_class:
             return 0
         building = building_class()
-        profit, upkeep = building.calculate_profit_and_upkeep(self.map.grid)
+
+        # Get adjacent building counts for this position
+        adjacent_buildings = self.get_adjacent_counts(row, col)
+
+        profit, upkeep = building.calculate_profit_and_upkeep(self.map.grid, pos[0], pos[1], mode="arcade")
         return profit - upkeep
+
 
     def calculate_score(self):
         score = 0
@@ -117,8 +122,12 @@ class ArcadeGame:
                 continue
             building = building_class()
             adj = self.get_adjacent_counts(row, col)
-            score += building.score(adj)
+            building_score = building.score(adj)
+            print(f"Score of {building_type} at ({row},{col}) with adjacency {adj} = {building_score}")
+            score += building_score
+        print(f"Total score: {score}")
         return score
+
     def get_adjacent_counts(self, row, col):
         counts = {}
         for dx, dy in [(-1,0),(1,0),(0,-1),(0,1)]:
@@ -230,7 +239,7 @@ class ArcadeGame:
                     if event.key == pygame.K_h:  # Press 'H' for Help/Tutorial
                         show_tutorial = not show_tutorial
                         if show_tutorial:
-                            show_legend_and_tutorial(self.map.screen)
+                            show_legend_and_tutorial(self.map.screen, "arcade")
                 # elif event.type == pygame.KEYDOWN:
                 #     if event.key == pygame.K_ESCAPE:
                 #         pygame.quit()

@@ -35,28 +35,36 @@ class industry(Building):
         super().__init__()
         self.type = "Industry"
         self.size = (1, 1)
-        self.color = (128, 128, 128)  # Gray color for industry buildings
+        self.color = (200, 200, 100)
         self.adjacency = {
-            "R": 1,  # In Arcade, each adjacent Residential gives 1 coin
+            "R": -1,
+            "C": 1,
+            "*": 1
         }
         self.type_identifier = "I"
-        self.profit = 2  # Used in Freeplay
-        self.upkeep = 1  # Only used in Freeplay
+        self.profit = 2
+        self.upkeep = 1
 
-    def calculate_profit_and_upkeep(self, adjacent_buildings, mode="freeplay"):
-        if mode == "freeplay":
-            profit = self.profit
-            upkeep = self.upkeep
-            net_profit = profit - upkeep
-        elif mode == "arcade":
-            profit = adjacent_buildings.get("R", 0)
-            upkeep = 0
-            net_profit = profit
+    def score(self, grid, row, col, mode="freeplay", visited=None):
+        if mode == "arcade":
+            score = 0
+            for dy, dx in [(-1, 0), (1, 0), (0, -1), (0, 1)]:
+                neighbor = grid.get((row + dy, col + dx))
+                if neighbor:
+                    if neighbor.type_identifier == "C":
+                        score += 1
+                    elif neighbor.type_identifier == "*":
+                        score += 1
+                    elif neighbor.type_identifier == "R":
+                        score -= 1
+            return max(score, 0)
+        elif mode == "freeplay":
+            return self.profit, self.upkeep
         else:
             raise ValueError("Mode must be 'freeplay' or 'arcade'")
 
-        return net_profit, upkeep
-
-    def score(self, grid):
-        # Each Industry scores 1 point in both modes
-        return sum(1 for row in grid for cell in row if cell and cell.type_identifier == "I")
+    def calculate_profit_and_upkeep(self, grid, row, col, mode="freeplay", visited=None):
+        if mode == "freeplay":
+            return self.profit, self.upkeep
+        else:
+            raise ValueError("Mode must be 'freeplay' or 'arcade'")

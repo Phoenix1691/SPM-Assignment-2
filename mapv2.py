@@ -165,8 +165,8 @@ class Map:
 
 
     def draw(self):
-        # self.screen.fill(WHITE)
-        self.update_margins()
+        self.screen.fill((240, 240, 240))  # Light grey background outside grid
+
         font = pygame.font.SysFont("Arial", self.tile_size // 2)
 
         if not self.dirty_tiles:
@@ -179,9 +179,14 @@ class Map:
             building = self.grid.get((row, col))
 
             if building:
-                color = BUILDING_COLORS.get(building, (211, 211, 211))
+                # Get the string identifier from building object
+                building_type = getattr(building, 'type_identifier', '?')
+
+                color = BUILDING_COLORS.get(building_type, (211, 211, 211))
                 pygame.draw.rect(self.screen, color, rect)
-                text_surface = font.render(building, True, BLACK)
+
+                # Render the identifier string, not the object itself
+                text_surface = font.render(building_type, True, BLACK)
                 text_rect = text_surface.get_rect(center=rect.center)
                 self.screen.blit(text_surface, text_rect)
             else:
@@ -190,9 +195,11 @@ class Map:
 
             pygame.draw.rect(self.screen, BLACK, rect, 1)
 
+
         self.dirty_tiles.clear()
         self.draw_minimap()
         self.draw_stats_bar()
+
 
 
     def is_on_border(self, row, col):

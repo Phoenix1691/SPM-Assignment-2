@@ -37,51 +37,51 @@ from buildings.building_parent import Building
 
 class road(Building):
     def __init__(self):
+        super().__init__()
         self.type = "Road"
         self.size = (1, 1)
-        self.color = (0, 0, 0)  # Black color for roads
+        self.color = (0, 0, 0)
         self.type_identifier = "*"
-        self.upkeep = 1  # Upkeep cost per disconnected cluster
         self.adjacency = {
             "*": 1,
         }
+        self.profit = 0
+        self.upkeep = 1
 
-    def score(self, adjacent_buildings):
-        # Arcade mode scoring: count connected road segments in the same row (adjacent left/right)
-        return adjacent_buildings.get("*", 0)
+    def score(self, grid, row, col, mode="freeplay", visited=None):
+        if mode == "arcade":
+            count = 0
+            for dy, dx in [(-1, 0), (1, 0), (0, -1), (0, 1)]:
+                neighbor = grid.get((row + dy, col + dx))
+                if neighbor and neighbor.type_identifier == "*":
+                    count += 1
+            return count, 0
+        elif mode == "freeplay":
+            # In freeplay, unconnected roads cost upkeep
+            # To implement upkeep for unconnected roads, you would check connectivity to roads
+            # Here, simply return fixed profit and upkeep as placeholder
+            return self.profit, self.upkeep
+        else:
+            raise ValueError("Mode must be 'freeplay' or 'arcade'")
 
-    def calculate_profit_and_upkeep(self, grid, mode="freeplay"):
+    def calculate_profit_and_upkeep(self, grid, row, col, mode="freeplay", visited=None):
+        if mode != "freeplay":
+            raise ValueError("Mode must be 'freeplay'")
+
+        # Check adjacency for connected roads or residential
+        connected = False
+        for dy, dx in [(-1, 0), (1, 0), (0, -1), (0, 1)]:
+            neighbor = grid.get((row + dy, col + dx))
+            if neighbor and neighbor.type_identifier in ("*", "R"):
+                connected = True
+                break
+
+        if connected:
+            upkeep = 0
+        else:
+            upkeep = 1
+
         profit = 0
-        upkeep = 0
-
-        if mode == "freeplay":
-            # Find all clusters of connected roads (adjacent in 4 directions)
-            visited = set()
-            clusters = 0
-
-            def neighbors(r, c):
-                for dr, dc in [(0,1), (0,-1), (1,0), (-1,0)]:
-                    nr, nc = r + dr, c + dc
-                    if 0 <= nr < len(grid) and 0 <= nc < len(grid[0]):
-                        yield nr, nc
-
-            for r in range(len(grid)):
-                for c in range(len(grid[0])):
-                    if grid[r][c] and grid[r][c].type_identifier == "*" and (r, c) not in visited:
-                        # BFS or DFS to find cluster
-                        stack = [(r,c)]
-                        visited.add((r,c))
-                        while stack:
-                            rr, cc = stack.pop()
-                            for nr, nc in neighbors(rr, cc):
-                                if (nr, nc) not in visited and grid[nr][nc] and grid[nr][nc].type_identifier == "*":
-                                    visited.add((nr, nc))
-                                    stack.append((nr, nc))
-                        clusters += 1
-
-            upkeep = clusters * self.upkeep
-
-        elif mode == "arcade":
-            upkeep = 0  # No upkeep in arcade mode
-
         return profit, upkeep
+
+

@@ -31,28 +31,36 @@ from buildings.building_parent import Building
 
 class park(Building):
     def __init__(self):
+        super().__init__()
         self.type = "Park"
         self.size = (1, 1)
-        self.color = (0, 255, 0)  # Green color for park buildings
+        self.color = (0, 255, 0)
         self.type_identifier = "O"
-        self.upkeep = 1  # Only relevant for freeplay
-        self.adjacency = {
-            "O": 1,  # Adjacent parks
-        }
+        self.upkeep = 1
 
-    # Calculate profit and upkeep based on mode
-    def calculate_profit_and_upkeep(self, mode="freeplay", adjacent_buildings=None):
-        if mode == "freeplay":
-            profit = 0
-            upkeep = self.upkeep
-        elif mode == "arcade":
-            profit = 0
-            upkeep = 0  # No upkeep in arcade mode
+    def get_adjacent_buildings_counts(self, grid, row, col):
+        counts = {}
+        for dy, dx in [(-1, 0), (1, 0), (0, -1), (0, 1)]:
+            neighbor = grid.get((row + dy, col + dx))
+            if neighbor:
+                key = getattr(neighbor, "type_identifier", None)
+                if key:
+                    counts[key] = counts.get(key, 0) + 1
+        return counts
+
+    def score(self, grid, row, col, mode="freeplay", visited=None):
+        if mode == "arcade":
+            count = 0
+            for dy, dx in [(-1, 0), (1, 0), (0, -1), (0, 1)]:
+                neighbor = grid.get((row + dy, col + dx))
+                if neighbor and neighbor.type_identifier == "O":
+                    count += 1
+            return count, 0
+        elif mode == "freeplay":
+            return 0, self.upkeep
         else:
             raise ValueError("Mode must be 'freeplay' or 'arcade'")
-        return profit, upkeep
 
-    # Score 1 point per adjacent park (arcade mode)
-    def score(self, adjacent_buildings):
-        score = adjacent_buildings.get("O", 0)
-        return score
+    def calculate_profit_and_upkeep(self, grid, row, col, mode="freeplay"):
+        profit, upkeep = self.score(grid, row, col, mode)
+        return profit, upkeep
