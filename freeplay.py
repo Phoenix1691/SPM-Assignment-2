@@ -119,7 +119,7 @@ class FreePlayGame:
                 #         return
 
             if self.is_game_over():
-                from mainMenu import main_menu
+                #from mainMenu import main_menu
                 from ui_utils import get_player_name
                 from highscore import save_highscore
 
@@ -133,7 +133,7 @@ class FreePlayGame:
                 if name:
                     save_highscore(name, self.score, "Freeplay")
 
-                main_menu()
+                #main_menu()
                 return
 
 
@@ -150,7 +150,6 @@ class FreePlayGame:
                     self.save_game()
                 elif option == "Menu":
                     from mainMenu import main_menu
-                    pygame.quit()
                     main_menu()
                 else:
                     self.selected_building = option
