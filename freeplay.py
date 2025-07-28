@@ -72,6 +72,9 @@ class FreePlayGame:
             self.draw_stats()
             buttons = self.draw_building_buttons()
 
+            font = pygame.font.SysFont("Arial", 18)
+            draw_legend(self.screen, font)
+
             if self.message_timer > 0:
                 font = pygame.font.SysFont("Arial", 20)
                 msg_surface = font.render(self.message, True, RED)
@@ -364,9 +367,34 @@ class FreePlayGame:
     def run(self):
         self.main()
 
+def draw_legend(screen, font):
+    # Background box for the legend at bottom of screen
+    legend_rect = pygame.Rect(10, 520, 300, 200)
+    pygame.draw.rect(screen, (240, 240, 240), legend_rect)
+    pygame.draw.rect(screen, (0, 0, 0), legend_rect, 2)  # border
+
+    # Title
+    title_surf = font.render("Legend - Building Types", True, (0, 0, 0))
+    screen.blit(title_surf, (legend_rect.x + 10, legend_rect.y + 5))
+
+    # Lines to display (no need to describe "R - Residential" since you said it's clear)
+    lines = [
+        "R - Residential",
+        "I - Industry",
+        "C - Commercial",
+        "O - Park",
+        "* - Road"
+    ]
+
+    y = legend_rect.y + 35
+    for line in lines:
+        line_surf = font.render(line, True, (0, 0, 0))
+        screen.blit(line_surf, (legend_rect.x + 10, y))
+        y += 25
+
 if __name__ == "__main__":
     pygame.init()
-    screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
+    screen = pygame.display.set_mode((0, 0), pygame.FULLSCREEN)
     game = FreePlayGame(screen)
     game.main()
 
