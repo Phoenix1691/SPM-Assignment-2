@@ -153,6 +153,9 @@ class ArcadeGame:
         pygame.init()
         clock = pygame.time.Clock()
         font = pygame.font.SysFont("Arial", 20)
+        
+        screen = pygame.display.set_mode((800, 600), pygame.RESIZABLE)
+        self.map.screen = screen
 
         placing_building = None
         demolishing = False
