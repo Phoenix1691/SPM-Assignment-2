@@ -20,7 +20,58 @@ buttons = {
     "Load Saved Game": pygame.Rect(250, 240, 300, 50),
     "Display High Scores": pygame.Rect(250, 310, 300, 50),
     "Exit Game": pygame.Rect(250, 380, 300, 50),
+
 }
+
+import pygame
+from highscore import get_top_scores
+
+def display_highscores_screen(screen):
+    pygame.init()
+    font = pygame.font.SysFont("Arial", 28)
+    clock = pygame.time.Clock()
+
+    running = True
+    while running:
+        screen.fill((0, 0, 50))
+
+        title = font.render("Top 10 Highscores", True, (255, 255, 255))
+        screen.blit(title, (screen.get_width() // 2 - title.get_width() // 2, 20))
+
+        y = 80
+        for mode in ["Freeplay", "Arcade"]:
+            mode_title = font.render(f"{mode} Mode", True, (255, 255, 0))
+            screen.blit(mode_title, (50, y))
+            y += 40
+
+            highscores = get_top_scores(mode)
+            if not highscores:
+                no_data = font.render("No scores yet.", True, (200, 200, 200))
+                screen.blit(no_data, (70, y))
+                y += 40
+            else:
+                for i, entry in enumerate(highscores):
+                    line = font.render(f"{i+1}. {entry['name']} - {entry['score']}", True, (255, 255, 255))
+                    screen.blit(line, (70, y))
+                    y += 30
+            y += 30
+
+        # Back button
+        back_rect = pygame.Rect(20, screen.get_height() - 60, 150, 40)
+        pygame.draw.rect(screen, (100, 100, 255), back_rect)
+        back_text = font.render("Back", True, (255, 255, 255))
+        screen.blit(back_text, (back_rect.x + 30, back_rect.y + 5))
+
+        pygame.display.flip()
+
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                running = False
+            elif event.type == pygame.MOUSEBUTTONDOWN:
+                if back_rect.collidepoint(event.pos):
+                    running = False
+
+        clock.tick(60)
 
 def draw_text_center(screen, text, rect, font, color=WHITE):
     text_surface = font.render(text, True, color)
@@ -89,6 +140,7 @@ def main_menu():
                                 print("No saved game to load.")
                         elif text == "Display High Scores":
                             print("Display high scores clicked")
+                            display_highscores_screen(screen)
                         elif text == "Exit Game":
                             pygame.quit()
                             sys.exit()

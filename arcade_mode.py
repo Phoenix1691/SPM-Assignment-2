@@ -12,6 +12,8 @@ import pickle
 from mapv2 import Map  # Ensure mapv2.py with Map class is in the same folder
 from mapv2 import STATS_HEIGHT
 from ui_utils import draw_button  # Assuming you place it in ui_utils.py
+from highscore import save_highscore
+from ui_utils import get_player_name  # or wherever you put the function
 
 GRID_SIZE = 20
 
@@ -231,6 +233,9 @@ class ArcadeGame:
                 self.map.screen.blit(text_surface, text_rect)
                 pygame.display.flip()
                 pygame.time.wait(3000)
+                name = get_player_name(self.map.screen)
+                if name:
+                    save_highscore(name, self.score, "Arcade")
                 from mainMenu import main_menu
                 main_menu()
                 return

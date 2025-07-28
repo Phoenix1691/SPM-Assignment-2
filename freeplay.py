@@ -103,13 +103,22 @@ class FreePlayGame:
 
             if self.is_game_over():
                 from mainMenu import main_menu
+                from ui_utils import get_player_name
+                from highscore import save_highscore
+
                 font = pygame.font.SysFont("Arial", 40)
                 label = font.render("Game Over: 20 turns of loss", True, RED)
                 self.screen.blit(label, (100, SCREEN_HEIGHT // 2))
                 pygame.display.flip()
-                pygame.time.wait(3000)
+                pygame.time.wait(2000)
+
+                name = get_player_name(self.screen)
+                if name:
+                    save_highscore(name, self.score, "Freeplay")
+
                 main_menu()
                 return
+
 
             pygame.display.flip()
             clock.tick(30)
