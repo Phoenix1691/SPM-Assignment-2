@@ -265,31 +265,16 @@ def draw_stats(screen, game):
 def main():
     game = ArcadeGame()
     game.run()
-
 def draw_legend(screen, font):
-    # Background box for the legend at bottom of screen
-    legend_rect = pygame.Rect(10, 520, 300, 200)
+    # Smaller legend box
+    legend_rect = pygame.Rect(10, 520, 300, 50)
     pygame.draw.rect(screen, (240, 240, 240), legend_rect)
     pygame.draw.rect(screen, (0, 0, 0), legend_rect, 2)  # border
 
-    # Title
-    title_surf = font.render("Legend - Building Types", True, (0, 0, 0))
-    screen.blit(title_surf, (legend_rect.x + 10, legend_rect.y + 5))
-
-    # Lines to display (no need to describe "R - Residential" since you said it's clear)
-    lines = [
-        "R - Residential",
-        "I - Industry",
-        "C - Commercial",
-        "O - Park",
-        "* - Road"
-    ]
-
-    y = legend_rect.y + 35
-    for line in lines:
-        line_surf = font.render(line, True, (0, 0, 0))
-        screen.blit(line_surf, (legend_rect.x + 10, y))
-        y += 25
+    # Display one line of legend text
+    legend_text = "Legend: Press H to see more details"
+    text_surf = font.render(legend_text, True, (0, 0, 0))
+    screen.blit(text_surf, (legend_rect.x + 10, legend_rect.y + 15))
 
     
 
