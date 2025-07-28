@@ -14,6 +14,8 @@ from mapv2 import STATS_HEIGHT
 from ui_utils import draw_button  # Assuming you place it in ui_utils.py
 from highscore import save_highscore
 from ui_utils import get_player_name  # or wherever you put the function
+from tutorial import show_legend_and_tutorial
+
 
 GRID_SIZE = 20
 
@@ -163,6 +165,7 @@ class ArcadeGame:
         demolish_btn = pygame.Rect(610, 10, 90, 30)
         save_btn = pygame.Rect(710, 10, 80, 30)
         main_menu_btn = pygame.Rect(610, 50, 180, 30)
+        show_tutorial = False
 
         while True:
             self.map.draw()
@@ -188,6 +191,7 @@ class ArcadeGame:
                 if event.type == pygame.QUIT:
                     pygame.quit()
                     return
+
                 elif event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
                     pos = event.pos
                     if main_menu_btn.collidepoint(pos):
@@ -195,8 +199,7 @@ class ArcadeGame:
                         from mainMenu import main_menu
                         main_menu()
                         return
-
-                    if button1.collidepoint(pos):
+                    elif button1.collidepoint(pos):
                         placing_building = self.building_choices[0]
                         demolishing = False
                         message = f"Placing: {placing_building}"
@@ -220,6 +223,11 @@ class ArcadeGame:
                             if success:
                                 placing_building = None
                         message = msg
+                elif event.type == pygame.KEYDOWN:
+                    if event.key == pygame.K_h:  # Press 'H' for Help/Tutorial
+                        show_tutorial = not show_tutorial
+                        if show_tutorial:
+                            show_legend_and_tutorial(self.map.screen)
                 # elif event.type == pygame.KEYDOWN:
                 #     if event.key == pygame.K_ESCAPE:
                 #         pygame.quit()

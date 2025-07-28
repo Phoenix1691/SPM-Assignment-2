@@ -14,6 +14,8 @@ import os
 import pickle
 from mapv2 import Map  # Your mapv2.py with Map class
 from ui_utils import draw_button
+from tutorial import show_legend_and_tutorial
+
 
 SCREEN_WIDTH = 800
 SCREEN_HEIGHT = 650
@@ -62,6 +64,7 @@ class FreePlayGame:
     def main(self):
         pygame.display.set_caption("Freeplay Game")
         clock = pygame.time.Clock()
+        show_tutorial = False
 
         while True:
             self.screen.fill(WHITE)
@@ -79,6 +82,7 @@ class FreePlayGame:
                 if event.type == pygame.QUIT:
                     pygame.quit()
                     return
+
                 elif event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
                     pos = event.pos
                     if pos[1] < UI_HEIGHT:
@@ -96,6 +100,16 @@ class FreePlayGame:
                             self.turn += 1
                             self.next_turn()
                         self.show_message(msg)
+
+                elif event.type == pygame.KEYDOWN:
+                    if event.key == pygame.K_ESCAPE:
+                        pygame.quit()
+                        return
+                    elif event.key == pygame.K_h:
+                        show_tutorial = not show_tutorial
+                        if show_tutorial:
+                            show_legend_and_tutorial(self.screen)
+
                 # elif event.type == pygame.KEYDOWN:
                 #     if event.key == pygame.K_ESCAPE:
                 #         pygame.quit()
