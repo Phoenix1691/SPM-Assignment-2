@@ -131,7 +131,7 @@ class ArcadeGame:
                 continue
             building = building_class()
             adj = self.get_adjacent_counts(row, col)
-            building_score = building.score(adj)
+            building_score = building.score(adj, row, col)
             print(f"Score of {building_type} at ({row},{col}) with adjacency {adj} = {building_score}")
             score += building_score
         print(f"Total score: {score}")
