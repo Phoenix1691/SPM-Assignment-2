@@ -55,7 +55,7 @@ class commercial(Building):
                 if neighbor:
                     if neighbor.type_identifier in ["R", "C"]:
                         score += 1
-            return max(score, 0)
+            return max(score, 0), 0
         elif mode == "freeplay":
             # Return zero or neutral score for freeplay mode
             return 0, 0
@@ -66,6 +66,6 @@ class commercial(Building):
         if mode == "freeplay":
             return self.profit, self.upkeep
         elif mode == "arcade":
-            return self.score(grid, row, col, mode), 0
+            return self.score(grid, row, col, mode)
         else:
             raise ValueError("Mode must be 'freeplay' or 'arcade'")
