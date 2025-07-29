@@ -316,7 +316,7 @@ class FreePlayGame:
             return False, f"Unknown building type: {self.selected_building}"
 
         building_instance = building_class_map[self.selected_building]()
-        building_instance.row = row  # store position in building instance
+        building_instance.row = row
         building_instance.col = col
 
         self.map.grid[(row, col)] = building_instance
@@ -324,10 +324,10 @@ class FreePlayGame:
         if self.map.is_on_border(row, col):
             self.map.expand_grid()
 
-        self.turn += 1
         self.score = self.calculate_score()
         self.map.first_turn = False
         return True, "Building placed."
+
     
     def demolish_building(self, pos):
         x, y = pos
@@ -337,10 +337,10 @@ class FreePlayGame:
             return False, "Invalid placement."
         if (row, col) in self.map.grid:
             del self.map.grid[(row, col)]
-            self.turn += 1
             self.score = self.calculate_score()
             return True, "Building demolished."
         return False, "No building to demolish here."
+
 
 
     def next_turn(self):

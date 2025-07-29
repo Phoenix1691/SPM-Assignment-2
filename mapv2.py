@@ -202,6 +202,16 @@ class Map:
         self.draw_minimap()
         self.draw_stats_bar()
 
+    def remove_building(self, row, col):
+        """Remove a building from the grid at (row, col)."""
+        if (row, col) in self.grid:
+            del self.grid[(row, col)]
+            self.dirty_tiles.add((row, col))
+            self.minimap_dirty = True
+
+            # Reset first_turn if no buildings remain
+            if len(self.grid) == 0:
+                self.first_turn = True
 
 
     def is_on_border(self, row, col):

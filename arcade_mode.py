@@ -95,7 +95,11 @@ class ArcadeGame:
             del self.map.grid[(row, col)]
             self.coins -= 1
             self.score = self.calculate_score()
+            # ✅ If no more buildings are on the map, reset first_turn flag
+            if len(self.map.grid) == 0:
+                self.map.first_turn = True
             return True, "Building demolished."
+
         return False, "No building to demolish here."
 
     def get_adjacent(self, row, col):
