@@ -74,6 +74,9 @@ class road(Building):
             upkeep = 0 if connected else 1
             profit = 0
             return profit, upkeep
+            upkeep = 0 if connected else 1
+            profit = 0
+            return profit, upkeep
 
         elif mode == "arcade":
             # For arcade mode, define how roads affect scoring or coins
