@@ -66,5 +66,7 @@ class industry(Building):
     def calculate_profit_and_upkeep(self, grid, row, col, mode="freeplay", visited=None):
         if mode == "freeplay":
             return self.profit, self.upkeep
+        elif mode == "arcade":
+            return 0, 0
         else:
             raise ValueError("Mode must be 'freeplay' or 'arcade'")
