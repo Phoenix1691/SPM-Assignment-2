@@ -67,6 +67,6 @@ class industry(Building):
         if mode == "freeplay":
             return self.profit, self.upkeep
         elif mode == "arcade":
-            return 0, 0
+            return self.score(grid, row, col, mode), 0
         else:
             raise ValueError("Mode must be 'freeplay' or 'arcade'")
