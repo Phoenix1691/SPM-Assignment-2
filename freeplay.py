@@ -282,7 +282,7 @@ class FreePlayGame:
                 building = self.map.grid.get((row, col))
                 if building:
                     adjacent_buildings = self.get_adjacent_buildings_counts(row, col)
-                    score += building.score(adjacent_buildings)
+                    score += building.score(adjacent_buildings, row, col)
         return score
 
 
