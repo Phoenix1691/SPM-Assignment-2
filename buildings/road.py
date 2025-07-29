@@ -65,23 +65,24 @@ class road(Building):
             raise ValueError("Mode must be 'freeplay' or 'arcade'")
 
     def calculate_profit_and_upkeep(self, grid, row, col, mode="freeplay", visited=None):
-        if mode != "freeplay":
-            raise ValueError("Mode must be 'freeplay'")
+        if mode == "freeplay":
+            # Check adjacency for connected roads or residential
+            connected = False
+            for dy, dx in [(-1, 0), (1, 0), (0, -1), (0, 1)]:
+                neighbor = grid.get((row + dy, col + dx))
+                if neighbor and neighbor.type_identifier in ("*", "R"):
+                    connected = True
+                    break
 
-        # Check adjacency for connected roads or residential
-        connected = False
-        for dy, dx in [(-1, 0), (1, 0), (0, -1), (0, 1)]:
-            neighbor = grid.get((row + dy, col + dx))
-            if neighbor and neighbor.type_identifier in ("*", "R"):
-                connected = True
-                break
+            upkeep = 0 if connected else 1
+            profit = 0
+            return profit, upkeep
 
-        if connected:
-            upkeep = 0
+        elif mode == "arcade":
+            # Arcade mode doesn't use profit/upkeep, so just return zeros
+            return 0, 0
+
         else:
-            upkeep = 1
-
-        profit = 0
-        return profit, upkeep
+            raise ValueError("Mode must be 'freeplay' or 'arcade'")
 
 
