@@ -180,12 +180,14 @@ class Map:
 
             if building:
                 # Get the string identifier from building object
-                building_type = getattr(building, 'type_identifier', '?')
-
+                building = self.grid.get((row, col))
+                if isinstance(building, str):
+                    building_type = building
+                else:
+                    building_type = getattr(building, 'type_identifier', '?')  # Because building is already the string identifier
                 color = BUILDING_COLORS.get(building_type, (211, 211, 211))
                 pygame.draw.rect(self.screen, color, rect)
 
-                # Render the identifier string, not the object itself
                 text_surface = font.render(building_type, True, BLACK)
                 text_rect = text_surface.get_rect(center=rect.center)
                 self.screen.blit(text_surface, text_rect)

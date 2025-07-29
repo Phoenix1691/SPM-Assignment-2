@@ -48,19 +48,25 @@ class park(Building):
                     counts[key] = counts.get(key, 0) + 1
         return counts
 
-    def score(self, grid, row, col, mode="freeplay", visited=None):
+    def score(self, grid, row, col, mode="freeplay"):
         if mode == "arcade":
             count = 0
             for dy, dx in [(-1, 0), (1, 0), (0, -1), (0, 1)]:
                 neighbor = grid.get((row + dy, col + dx))
                 if neighbor and neighbor.type_identifier == "O":
                     count += 1
-            return count, 0
+            return count  # Just score
         elif mode == "freeplay":
-            return 0, self.upkeep
+            return 0  # No profit in freeplay scoring
         else:
             raise ValueError("Mode must be 'freeplay' or 'arcade'")
 
     def calculate_profit_and_upkeep(self, grid, row, col, mode="freeplay"):
-        profit, upkeep = self.score(grid, row, col, mode)
-        return profit, upkeep
+        if mode == "freeplay":
+            return 0, self.upkeep
+        elif mode == "arcade":
+            profit = self.score(grid, row, col, mode="arcade")
+            return profit, 0
+        else:
+            raise ValueError("Mode must be 'freeplay' or 'arcade'")
+

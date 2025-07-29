@@ -119,7 +119,7 @@ class ArcadeGame:
         # Get adjacent building counts for this position
         adjacent_buildings = self.get_adjacent_counts(row, col)
 
-        profit, upkeep = building.calculate_profit_and_upkeep(self.map.grid, pos[0], pos[1], mode="arcade")
+        profit, upkeep = building.calculate_profit_and_upkeep(self.map.grid, pos[0], pos[1], mode='arcade')
         return profit - upkeep
 
 
@@ -131,9 +131,12 @@ class ArcadeGame:
                 continue
             building = building_class()
             adj = self.get_adjacent_counts(row, col)
-            building_score = building.score(adj)
+            building_score = building.score(adj, row, col)
             print(f"Score of {building_type} at ({row},{col}) with adjacency {adj} = {building_score}")
-            score += building_score
+            if isinstance(building_score, tuple):
+                score += building_score[0]
+            else:
+                score += building_score
         print(f"Total score: {score}")
         return score
 

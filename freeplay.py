@@ -282,7 +282,13 @@ class FreePlayGame:
                 building = self.map.grid.get((row, col))
                 if building:
                     adjacent_buildings = self.get_adjacent_buildings_counts(row, col)
-                    score += building.score(adjacent_buildings)
+                    building_score = building.score(self.map.grid, row, col, mode="freeplay")
+                    if isinstance(building_score, tuple):
+                        profit, upkeep = building_score
+                        score += profit - upkeep
+                    else:
+                        score += building_score
+
         return score
 
 

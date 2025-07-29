@@ -61,15 +61,14 @@ class residential(Building):
                         score += 1
                     elif neighbor.type_identifier == "I":
                         score -= 1
-            return max(score, 0), 0
+            return max(score, 0)
 
         elif mode == "freeplay":
             if visited is None:
                 visited = set()
 
             if (row, col) in visited:
-                # Already counted this cluster, so no profit or upkeep from this tile
-                return 0, 0
+                return 0  # Already counted
 
             cluster = set()
             stack = [(row, col)]
@@ -86,16 +85,22 @@ class residential(Building):
                             stack.append((nr, nc))
 
             visited.update(cluster)
-            profit = len(cluster) * self.profit
-            upkeep = self.upkeep  # ONE upkeep per cluster, not per tile
-            return profit, upkeep
+            return len(cluster)  # return profit only
 
         else:
             raise ValueError("Mode must be 'freeplay' or 'arcade'")
 
-
     def calculate_profit_and_upkeep(self, grid, row, col, mode="freeplay", visited=None):
-        profit, upkeep = self.score(grid, row, col, mode, visited)
-        return profit, upkeep
+        if mode == "freeplay":
+            if visited is None:
+                visited = set()
+            profit = self.score(grid, row, col, mode="freeplay", visited=visited)
+            upkeep = self.upkeep if profit > 0 else 0
+            return profit, upkeep
+        elif mode == "arcade":
+            profit = self.score(grid, row, col, mode="arcade")
+            return profit, 0
+        else:
+            raise ValueError("Mode must be 'freeplay' or 'arcade'")
 
 
