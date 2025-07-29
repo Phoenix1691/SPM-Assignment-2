@@ -66,6 +66,6 @@ class commercial(Building):
         if mode == "freeplay":
             return self.profit, self.upkeep
         elif mode == "arcade":
-            return self.score(grid, row, col, mode)
+            return self.score(grid, row, col, mode), 0
         else:
             raise ValueError("Mode must be 'freeplay' or 'arcade'")
