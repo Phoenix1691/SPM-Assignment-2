@@ -47,26 +47,3 @@ class commercial(Building):
         self.profit = 3
         self.upkeep = 2
 
-    def score(self, grid, row, col, mode="arcade", visited=None):
-        if mode == "arcade":
-            score = 0
-            for dy, dx in [(-1, 0), (1, 0), (0, -1), (0, 1)]:
-                neighbor = grid.get((row + dy, col + dx))
-                if neighbor:
-                    if neighbor.type_identifier in ["R", "C"]:
-                        score += 1
-            return max(score, 0)  # single int score
-        elif mode == "freeplay":
-            return 0  # score does not apply in freeplay
-        else:
-            raise ValueError("Mode must be 'freeplay' or 'arcade'")
-
-    def calculate_profit_and_upkeep(self, grid, row, col, mode="freeplay"):
-        if mode == "freeplay":
-            return self.profit, self.upkeep
-        elif mode == "arcade":
-            profit = self.score(grid, row, col, mode)
-            upkeep = 0  # assume no upkeep in arcade mode, or customize if needed
-            return profit, upkeep
-        else:
-            raise ValueError("Mode must be 'freeplay' or 'arcade'")

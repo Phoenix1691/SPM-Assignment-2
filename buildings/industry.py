@@ -44,31 +44,3 @@ class industry(Building):
         self.type_identifier = "I"
         self.profit = 2
         self.upkeep = 1
-
-    def score(self, grid, row, col, mode="freeplay", visited=None):
-        if mode == "arcade":
-            score = 0
-            for dy, dx in [(-1, 0), (1, 0), (0, -1), (0, 1)]:
-                neighbor = grid.get((row + dy, col + dx))
-                if neighbor:
-                    if neighbor.type_identifier == "C":
-                        score += 1
-                    elif neighbor.type_identifier == "*":
-                        score += 1
-                    elif neighbor.type_identifier == "R":
-                        score -= 1
-            return max(score, 0)
-        elif mode == "freeplay":
-            return self.profit, self.upkeep
-        else:
-            raise ValueError("Mode must be 'freeplay' or 'arcade'")
-
-    def calculate_profit_and_upkeep(self, grid, row, col, mode="freeplay", visited=None):
-        if mode == "freeplay":
-            return self.profit, self.upkeep
-        elif mode == "arcade":
-            score_value = self.score(grid, row, col, mode="arcade")
-            # Return arcade score as profit, and 0 upkeep (or define if needed)
-            return score_value, 0
-        else:
-            raise ValueError("Mode must be 'freeplay' or 'arcade'")

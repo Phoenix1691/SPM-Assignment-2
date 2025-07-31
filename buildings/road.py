@@ -48,49 +48,6 @@ class road(Building):
         self.profit = 0
         self.upkeep = 1
 
-    def score(self, grid, row, col, mode="arcade", visited=None):
-        if mode == "arcade":
-            count = 0
-            for dy, dx in [(-1, 0), (1, 0), (0, -1), (0, 1)]:
-                neighbor = grid.get((row + dy, col + dx))
-                if neighbor and neighbor.type_identifier == "*":
-                    count += 1
-            return count  # return just the score
-        elif mode == "freeplay":
-            return 0  # roads don't score in freeplay
-        else:
-            raise ValueError("Mode must be 'freeplay' or 'arcade'")
-
-    def calculate_profit_and_upkeep(self, grid, row, col, mode, visited=None):
-        if mode == "freeplay":
-            # your existing freeplay logic here
-            connected = False
-            for dy, dx in [(-1, 0), (1, 0), (0, -1), (0, 1)]:
-                neighbor = grid.get((row + dy, col + dx))
-                if neighbor and neighbor.type_identifier in ("*", "R"):
-                    connected = True
-                    break
-
-            upkeep = 0 if connected else 1
-            profit = 0
-            return profit, upkeep
-            upkeep = 0 if connected else 1
-            profit = 0
-            return profit, upkeep
-
-        elif mode == "arcade":
-            # For arcade mode, define how roads affect scoring or coins
-            # For example, return the count of adjacent roads as profit, upkeep 0:
-            count = 0
-            for dy, dx in [(-1, 0), (1, 0), (0, -1), (0, 1)]:
-                neighbor = grid.get((row + dy, col + dx))
-                if neighbor and neighbor.type_identifier == "*":
-                    count += 1
-            return count, 0
-
-        else:
-            raise ValueError("Mode must be 'freeplay' or 'arcade'")
-
 
 
 

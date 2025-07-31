@@ -3,6 +3,7 @@ class Building:
     def __init__(self):
         self.type = None
         self.size = (1, 1)
+        self.route_no = None
     
     def get_adjacent_buildings(self, grid, row, col):
         adjacent = []

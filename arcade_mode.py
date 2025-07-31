@@ -16,6 +16,8 @@ from highscore import save_highscore
 from ui_utils import get_player_name  # or wherever you put the function
 from ui_utils import draw_legend
 from tutorial import show_legend_and_tutorial
+from scoring import ScoringSystem
+from economy import GameEconomy
 
 LEGEND_ITEMS = {
     "R": "Residential",
@@ -56,6 +58,7 @@ class ArcadeGame:
         self.selected_building = None
         self.game_over = False
 
+
     def random_building_choices(self):
         return random.sample(BUILDINGS, 2)
 
@@ -69,8 +72,7 @@ class ArcadeGame:
             self.turn += 1
 
             # Calculate coins earned based on new building adjacency
-            coins_gained = self.calculate_coins_from_new_building(pos, building)
-            self.coins += coins_gained
+            self.coins = self.calculate_coins_from_new_building(pos, building)
 
             self.score = self.calculate_score()
             self.building_choices = self.random_building_choices()
@@ -80,7 +82,7 @@ class ArcadeGame:
             if self.coins <= 0 or len(self.map.grid) >= self.map.grid_size ** 2:
                 self.game_over = True
 
-            return True, f"Building placed. Coins gained: {coins_gained}"
+            return True, f"Building placed. Coins gained: {self.coins}"
         else:
             return False, "Cannot place building here."
 
@@ -95,7 +97,7 @@ class ArcadeGame:
             del self.map.grid[(row, col)]
             self.coins -= 1
             self.score = self.calculate_score()
-            # ✅ If no more buildings are on the map, reset first_turn flag
+            # If no more buildings are on the map, reset first_turn flag
             if len(self.map.grid) == 0:
                 self.map.first_turn = True
             return True, "Building demolished."
@@ -110,39 +112,13 @@ class ArcadeGame:
                 adj.append(self.map.grid.get((r, c), "."))
         return adj
 
-    def calculate_coins_from_new_building(self, pos, building_type):
-        x, y = pos
-        row = (y - STATS_HEIGHT) // self.map.tile_size
-        col = x // self.map.tile_size
-
-        building_class = get_building_class(building_type)
-        if not building_class:
-            return 0
-        building = building_class()
-
-        # Get adjacent building counts for this position
-        adjacent_buildings = self.get_adjacent_counts(row, col)
-
-        profit, upkeep = building.calculate_profit_and_upkeep(self.map.grid, pos[0], pos[1], mode='arcade')
-        return profit - upkeep
-
+    def calculate_coins_from_new_building(self, pos, building):
+        # Arcade mode: returns total remaining coins (start from 16, -1 per building, +generated coins)
+        return GameEconomy.get_status_arcade(self.map.grid, pos, building)
 
     def calculate_score(self):
-        score = 0
-        for (row, col), building_type in self.map.grid.items():
-            building_class = get_building_class(building_type)
-            if not building_class:
-                continue
-            building = building_class()
-            adj = self.get_adjacent_counts(row, col)
-            building_score = building.score(adj, row, col)
-            print(f"Score of {building_type} at ({row},{col}) with adjacency {adj} = {building_score}")
-            if isinstance(building_score, tuple):
-                score += building_score[0]
-            else:
-                score += building_score
-        print(f"Total score: {score}")
-        return score
+        # Returns total score from ScoringSystem
+        return ScoringSystem.scoring_main(self.map.grid)
 
     def get_adjacent_counts(self, row, col):
         counts = {}

@@ -37,36 +37,3 @@ class park(Building):
         self.color = (0, 255, 0)
         self.type_identifier = "O"
         self.upkeep = 1
-
-    def get_adjacent_buildings_counts(self, grid, row, col):
-        counts = {}
-        for dy, dx in [(-1, 0), (1, 0), (0, -1), (0, 1)]:
-            neighbor = grid.get((row + dy, col + dx))
-            if neighbor:
-                key = getattr(neighbor, "type_identifier", None)
-                if key:
-                    counts[key] = counts.get(key, 0) + 1
-        return counts
-
-    def score(self, grid, row, col, mode="freeplay"):
-        if mode == "arcade":
-            count = 0
-            for dy, dx in [(-1, 0), (1, 0), (0, -1), (0, 1)]:
-                neighbor = grid.get((row + dy, col + dx))
-                if neighbor and neighbor.type_identifier == "O":
-                    count += 1
-            return count  # Just score
-        elif mode == "freeplay":
-            return 0  # No profit in freeplay scoring
-        else:
-            raise ValueError("Mode must be 'freeplay' or 'arcade'")
-
-    def calculate_profit_and_upkeep(self, grid, row, col, mode="freeplay"):
-        if mode == "freeplay":
-            return 0, self.upkeep
-        elif mode == "arcade":
-            profit = self.score(grid, row, col, mode="arcade")
-            return profit, 0
-        else:
-            raise ValueError("Mode must be 'freeplay' or 'arcade'")
-

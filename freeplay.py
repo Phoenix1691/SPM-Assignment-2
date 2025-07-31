@@ -251,45 +251,11 @@ class FreePlayGame:
         return counts
 
 
-    def calculate_profit_and_upkeep(self):
-        profit = 0
-        upkeep = 0
-        visited = set()  # Shared set for cluster detection
+    def calculate_profit_and_upkeep():
+        return
 
-        for (row, col), building in self.map.grid.items():
-            if building.type_identifier == "R":
-                if (row, col) not in visited:
-                    p, u = building.calculate_profit_and_upkeep(self.map.grid, row, col, mode="freeplay", visited=visited)
-                    profit += p
-                    upkeep += u
-            else:
-                p, u = building.calculate_profit_and_upkeep(self.map.grid, row, col, mode="freeplay")
-                profit += p
-                upkeep += u
-
-        return profit, upkeep
-
-
-
-
-
-    def calculate_score(self):
-        score = 0
-        min_row, max_row, min_col, max_col = self.get_bounds()
-
-        for row in range(min_row, max_row + 1):
-            for col in range(min_col, max_col + 1):
-                building = self.map.grid.get((row, col))
-                if building:
-                    adjacent_buildings = self.get_adjacent_buildings_counts(row, col)
-                    building_score = building.score(self.map.grid, row, col, mode="freeplay")
-                    if isinstance(building_score, tuple):
-                        profit, upkeep = building_score
-                        score += profit - upkeep
-                    else:
-                        score += building_score
-
-        return score
+    def calculate_score():
+        return 
 
 
     def place_building(self, pos):
