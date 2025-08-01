@@ -1,59 +1,90 @@
-from scoring import ScoringSystem  # Adjust import path if needed
+from scoring import ScoringSystem
 
 class GameEconomy:
     def __init__(self, map_reference, mode="arcade"):
-        """
-        Initialize the economy manager.
-        :param map_reference: Reference to the game map (grid, buildings, etc.)
-        :param mode: "arcade" or "freeplay"
-        """
         self.mode = mode
         self.map = map_reference
         self.score_system = ScoringSystem(map_reference)
         self.score = 0
-        self.coins = 16 if mode == "arcade" else float('inf')  # Arcade starts with 16 coins; Freeplay unlimited
+        self.coins = 16 if mode == "arcade" else float('inf')
+
+    def calculate_total_score(self):
+        total = 0
+        for pos, abbr in self.map.grid.items():
+            total += self.score_system.scoring_main(pos, abbr)
+        return total
 
     def place_building(self, pos, building_abbr):
-        """
-        Attempt to place a building and update economy.
-        For arcade mode, deduct 1 coin on placement.
-        Updates score based on scoring system.
-        Returns (success, message)
-        """
         if self.mode == "arcade" and self.coins < 1:
             return False, "Not enough coins to place building."
-
-        # Placement should be done externally on the map before calling this or 
-        # add a method here to handle map placement too if needed.
 
         if self.mode == "arcade":
             self.coins -= 1
 
-        self.score += self.score_system.scoring_main(pos, building_abbr)
+        # Place building on map grid here before scoring (if not done elsewhere)
+        self.map.grid[(pos[1], pos[0])] = building_abbr  # if needed
+
+        # Recalculate total score after placement
+        self.score = self.calculate_total_score()
+
         return True, "Building placed."
 
-    def get_status_arcade(self, pos, building_abbr):
-        """
-        For arcade mode:
-        Place building, update coins and score.
-        Calculate coins generated this turn by industry/commercial buildings.
-        Return (remaining_coins, current_score, message)
-        """
-        success, msg = self.place_building(pos, building_abbr)
-        if not success:
-            return self.coins, self.score, msg
+    def generate_arcade_coins(self):
+        coins = 0
+        visited = set()
 
-        coins_gained = self.score_system.coin_gen_arcade()
-        self.coins += coins_gained
+        for (y, x), abbr in self.map.grid.items():
+            pos = (x, y)
+            print(f"Checking tile at {pos}: {abbr}")
+            if abbr in ["I", "C"] and pos not in visited:
+                connected = self.score_system.get_connected_buildings(pos)
+                count = sum(1 for _, b in connected if b == "R")
+                coins += count
+                visited.add(pos)
 
-        return self.coins, self.score, "OK"
+        return coins
 
-    def get_status_freeplay(self):
-        """
-        For freeplay mode:
-        Return profit, upkeep, and score from the scoring system.
-        Coins are unlimited, so no coin tracking here.
-        """
-        profit, upkeep = self.score_system.calculate_profit_and_upkeep()
-        score = self.score_system.calculate_score()
-        return profit, upkeep, score
+    def calculate_freeplay_income(self):
+        profit = 0
+        upkeep = 0
+
+        res_clusters = self.score_system._get_clusters("R")
+        total_residential = sum(len(cluster) for cluster in res_clusters)
+        profit += total_residential
+        upkeep += len(res_clusters)
+
+        industry_count = 0
+        commercial_count = 0
+        park_count = 0
+
+        for abbr in self.map.grid.values():
+            if abbr == "I":
+                industry_count += 1
+            elif abbr == "C":
+                commercial_count += 1
+            elif abbr == "O":
+                park_count += 1
+
+        profit += industry_count * 2
+        upkeep += industry_count
+
+        profit += commercial_count * 3
+        upkeep += commercial_count * 2
+
+        upkeep += park_count
+
+        road_clusters = self.score_system._get_clusters("*")
+        for cluster in road_clusters:
+            if len(cluster) == 1:
+                upkeep += 1
+
+        return profit, upkeep
+
+    def get_stats_arcade(self):
+        coins = self.coins
+        score = self.score
+        return coins, score
+
+    def get_stats_freeplay(self):
+        profit, upkeep = self.calculate_freeplay_income()
+        return profit, upkeep, self.score

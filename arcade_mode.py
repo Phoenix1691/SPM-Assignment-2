@@ -57,6 +57,8 @@ class ArcadeGame:
         self.building_choices = self.random_building_choices()
         self.selected_building = None
         self.game_over = False
+        self.economy = GameEconomy(self.map)
+        self.score_system = ScoringSystem(self.map)
 
 
     def random_building_choices(self):
@@ -70,11 +72,12 @@ class ArcadeGame:
 
             self.coins -= 1
             self.turn += 1
-
-            # Calculate coins earned based on new building adjacency
-            self.coins = self.calculate_coins_from_new_building(pos, building)
-
-            self.score = self.calculate_score()
+            # Get coins generated from connected buildings
+            generated = self.economy.generate_arcade_coins()
+            self.coins += generated
+            gained_score = self.calculate_score(pos, building)
+            print(f"Score gained this turn: {gained_score}")
+            self.score += gained_score
             self.building_choices = self.random_building_choices()
             self.map.first_turn = False
 
@@ -82,11 +85,11 @@ class ArcadeGame:
             if self.coins <= 0 or len(self.map.grid) >= self.map.grid_size ** 2:
                 self.game_over = True
 
-            return True, f"Building placed. Coins gained: {self.coins}"
+            return True, f"Building placed. Coins: {self.coins}"
         else:
             return False, "Cannot place building here."
 
-    def demolish_building(self, pos):
+    def demolish_building(self, pos, building):
         x, y = pos
         row = (y - self.map.top_margin) // self.map.tile_size
         col = (x - self.map.left_margin) // self.map.tile_size
@@ -96,7 +99,7 @@ class ArcadeGame:
                 return False, "Not enough coins to demolish."
             del self.map.grid[(row, col)]
             self.coins -= 1
-            self.score = self.calculate_score()
+            self.score += self.calculate_score(pos, building)
             # If no more buildings are on the map, reset first_turn flag
             if len(self.map.grid) == 0:
                 self.map.first_turn = True
@@ -112,13 +115,9 @@ class ArcadeGame:
                 adj.append(self.map.grid.get((r, c), "."))
         return adj
 
-    def calculate_coins_from_new_building(self, pos, building):
-        # Arcade mode: returns total remaining coins (start from 16, -1 per building, +generated coins)
-        return GameEconomy.get_status_arcade(self.map.grid, pos, building)
-
-    def calculate_score(self):
+    def calculate_score(self, pos, building_abbr):
         # Returns total score from ScoringSystem
-        return ScoringSystem.scoring_main(self.map.grid)
+        return self.score_system.scoring_main(pos, building_abbr)
 
     def get_adjacent_counts(self, row, col):
         counts = {}
@@ -224,7 +223,7 @@ class ArcadeGame:
                     else:
                         msg = ""
                         if demolishing:
-                            success, msg = self.demolish_building(pos)
+                            success, msg = self.demolish_building(pos, placing_building)
                         elif placing_building:
                             success, msg = self.place_building(pos, placing_building)
                             if success:
