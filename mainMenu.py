@@ -4,8 +4,7 @@ import pygame
 import sys
 import pickle
 from arcade_mode import main as arcade_main
-from freeplay import FreePlayGame
-
+from freeplay import main as freeplay_main
 
 # Colors
 WHITE = (255, 255, 255)
@@ -20,7 +19,6 @@ buttons = {
     "Load Saved Game": pygame.Rect(250, 240, 300, 50),
     "Display High Scores": pygame.Rect(250, 310, 300, 50),
     "Exit Game": pygame.Rect(250, 380, 300, 50),
-
 }
 
 import pygame
@@ -89,7 +87,7 @@ def load_saved_game(screen,filename="savegame.pkl"):
     mode = data.get('mode')
     if mode == 'arcade':
         from arcade_mode import ArcadeGame
-        game = ArcadeGame()
+        game = ArcadeGame(screen)
     elif mode == 'freeplay':
         from freeplay import FreePlayGame
         game = FreePlayGame(screen)
@@ -128,28 +126,27 @@ def main_menu():
                 for text, rect in buttons.items():
                     if rect.collidepoint(event.pos):
                         if text == "Start New Arcade Game":
-                            arcade_main()  # assumes arcade_main() manages its own loop and returns here when done
+                            from arcade_mode import main as arcade_main
+                            arcade_main()  # Runs self-contained
+
                         elif text == "Start New Free Play Game":
-                            # Create fullscreen screen for Freeplay
-                            fullscreen_screen = pygame.display.set_mode((0, 0), pygame.FULLSCREEN)
-                            game = FreePlayGame(fullscreen_screen)
-                            game.run()
-                            # After game ends, recreate main menu screen if needed:
-                            screen = pygame.display.set_mode((800, 600), pygame.RESIZABLE)
+                            from freeplay import main as freeplay_main
+                            freeplay_main()  # Runs self-contained
 
                         elif text == "Load Saved Game":
                             game = load_saved_game(screen)
                             if game:
-                                game.run()  # run loaded game loop
+                                game.run()  # Each game has its own loop
                             else:
                                 print("No saved game to load.")
+
                         elif text == "Display High Scores":
                             print("Display high scores clicked")
                             display_highscores_screen(screen)
+
                         elif text == "Exit Game":
                             pygame.quit()
                             sys.exit()
-
         pygame.display.flip()
 
 

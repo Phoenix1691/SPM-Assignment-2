@@ -1,52 +1,26 @@
 # buildings/road.py - This file defines the Road building type in the city-building game.
-# • Road (*): Scores 1 point per connected road (*) in the same row.
-#Park (O): Each park costs 1 coin to upkeep.
-'''
+# # • Road (*): Scores 1 point per connected road (*) in the same row.
+# #Park (O): Each park costs 1 coin to upkeep.
 from buildings.building_parent import Building
 
 class road(Building):
-    def __init__(self):
-        self.type = "Road"
-        self.size = (1, 1)
-        self.color = (0, 0, 0)  # Black color for roads
-        self.type_identifier = "*"
-        self.upkeep = 1  # Upkeep for road segments
-        self.adjacency = {
-            "*": 1,  # Road
-        }
+    type_identifier = "*"
 
-# Road (*): Scores 1 point per connected road (*) in the same row.
-    def score(self, adjacent_buildings):
-        score = 0
-        # Count the number of connected road segments in the same row
-        for building_type, count in adjacent_buildings.items():
-            if building_type == "*":
-                score += count
-        return score
-    
-# Road (*): Each unconnected road segment costs 1 coin to upkeep.
-    def calculate_profit_and_upkeep(self, grid):
-        profit = 0
-        upkeep = 0
-        clusters = []
-        road_segments = []
-        visited = set()
-        return profit, upkeep
-'''
-from buildings.building_parent import Building
+    def score(self, adjacent_counts):
+        # 1 point per connected road in same row
+        # This should be handled in calculate_score, but for simplicity:
+        return adjacent_counts.get("*", 0)
 
-class road(Building):
-    def __init__(self):
-        super().__init__()
-        self.type = "Road"
-        self.size = (1, 1)
-        self.color = (0, 0, 0)
-        self.type_identifier = "*"
-        self.adjacency = {
-            "*": 1,
-        }
-        self.profit = 0
-        self.upkeep = 1
+    def calculate_profit_and_upkeep(self, grid, row, col, mode=None):
+        # Roads have no profit
+        # 1 coin upkeep if isolated (no adjacent road)
+        has_neighbor = False
+        for dr, dc in [(-1,0),(1,0),(0,-1),(0,1)]:
+            neighbor = grid.get((row+dr, col+dc))
+            if neighbor and getattr(neighbor, "type_identifier", "") == "*":
+                has_neighbor = True
+                break
+        return 0, 0 if has_neighbor else 1
 
 
 

@@ -6,19 +6,17 @@ Press S - Save game
 """
 
 import importlib
+from tkinter import font
 import pygame
 import random
 import pickle
 from mapv2 import Map  # Ensure mapv2.py with Map class is in the same folder
-from mapv2 import STATS_HEIGHT
-from ui_utils import draw_button  # Assuming you place it in ui_utils.py
 from highscore import save_highscore
-from ui_utils import get_player_name  # or wherever you put the function
-from ui_utils import draw_legend
 from tutorial import show_legend_and_tutorial
 from scoring import ScoringSystem
 from economy import GameEconomy
-
+from ui_utils import get_player_name, UI_BG_COLOR
+from ui_utils import draw_full_top_ui
 LEGEND_ITEMS = {
     "R": "Residential",
     "I": "Industry",
@@ -27,8 +25,10 @@ LEGEND_ITEMS = {
     "*": "Road"
 }
 
-
 GRID_SIZE = 20
+# UI layout constants
+UI_BAR_HEIGHT = 50          # top bar for buttons and legend
+MESSAGE_BAR_HEIGHT = 30     # gray message bar
 
 BUILDINGS = ['R', 'I', 'C', 'O', '*']
 
@@ -47,10 +47,10 @@ def get_building_class(type_identifier):
     return None
 
 class ArcadeGame:
-    def __init__(self):
+    def __init__(self, screen):
         self.map = Map("arcade", GRID_SIZE)
+        self.map.screen = screen           # store the given screen
         self.map.initialize_screen()
-        self.map.screen.get_width()
         self.turn = 0
         self.coins = 16
         self.score = 0
@@ -59,7 +59,6 @@ class ArcadeGame:
         self.game_over = False
         self.economy = GameEconomy(self.map)
         self.score_system = ScoringSystem(self.map)
-
 
     def random_building_choices(self):
         return random.sample(BUILDINGS, 2)
@@ -155,47 +154,19 @@ class ArcadeGame:
         pygame.init()
         clock = pygame.time.Clock()
         font = pygame.font.SysFont("Arial", 20)
-        
-        infoObject = pygame.display.Info()
-        WIDTH, HEIGHT = infoObject.current_w, infoObject.current_h
-        screen = pygame.display.set_mode((WIDTH, HEIGHT), pygame.FULLSCREEN)
-
-        self.map.screen = screen
 
         placing_building = None
         demolishing = False
         message = ""
-
-        button1 = pygame.Rect(500, 10, 40, 30)
-        button2 = pygame.Rect(550, 10, 40, 30)
-        demolish_btn = pygame.Rect(610, 10, 90, 30)
-        save_btn = pygame.Rect(710, 10, 80, 30)
-        main_menu_btn = pygame.Rect(610, 50, 180, 30)
         show_tutorial = False
 
         while True:
+            screen = self.map.screen
+            screen.fill((230, 230, 230))
             self.map.draw()
-            draw_stats(self.map.screen, self)
-            pygame.draw.line(self.map.screen, (100, 100, 100), (0, STATS_HEIGHT), (self.map.screen.get_width(), STATS_HEIGHT), 1)
-            draw_button(self.map.screen, button1, self.building_choices[0], font, (180, 180, 255))
-            draw_button(self.map.screen, button2, self.building_choices[1], font, (180, 180, 255))
-            draw_button(self.map.screen, demolish_btn, "Demolish", font, (255, 180, 180))
-            draw_button(self.map.screen, save_btn, "Save", font, (180, 255, 180))
-            draw_button(self.map.screen, main_menu_btn, "Main Menu", font, (200, 200, 200))
 
-            font = pygame.font.SysFont("Arial", 18)
-            draw_legend(self.map.screen, font)
-
-            # Clear the message area first
-            message_area_rect = pygame.Rect(0, STATS_HEIGHT, self.map.screen.get_width(), 30)
-            pygame.draw.rect(self.map.screen, (230, 230, 230), message_area_rect)
-
-            # Inside stats bar
-            if message:
-                msg_surface = font.render(message, True, (100, 0, 0))
-                self.map.screen.blit(msg_surface, (10, STATS_HEIGHT - 25))  # Higher position
-
-
+            buttons = draw_full_top_ui(screen, self, message, building_choices=self.building_choices, demolish_mode=demolishing)
+            # --- Events ---
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
                     pygame.quit()
@@ -203,21 +174,23 @@ class ArcadeGame:
 
                 elif event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
                     pos = event.pos
-                    if main_menu_btn.collidepoint(pos):
+                    if buttons["Menu"].collidepoint(pos):
+                        from mainMenu import main_menu
+                        main_menu()
                         return
-                    elif button1.collidepoint(pos):
+                    elif buttons[self.building_choices[0]].collidepoint(pos):
                         placing_building = self.building_choices[0]
                         demolishing = False
                         message = f"Placing: {placing_building}"
-                    elif button2.collidepoint(pos):
+                    elif buttons[self.building_choices[1]].collidepoint(pos):
                         placing_building = self.building_choices[1]
                         demolishing = False
                         message = f"Placing: {placing_building}"
-                    elif demolish_btn.collidepoint(pos):
+                    elif buttons["Demolish"].collidepoint(pos):
                         demolishing = True
                         placing_building = None
                         message = "Demolish mode."
-                    elif save_btn.collidepoint(pos):
+                    elif buttons["Save"].collidepoint(pos):
                         self.save_game()
                         message = "Game saved."
                     else:
@@ -229,27 +202,26 @@ class ArcadeGame:
                             if success:
                                 placing_building = None
                         message = msg
+
                 elif event.type == pygame.KEYDOWN:
-                    if event.key == pygame.K_h:  # Press 'H' for Help/Tutorial
+                    if event.key == pygame.K_h:
                         show_tutorial = not show_tutorial
                         if show_tutorial:
-                            show_legend_and_tutorial(self.map.screen, "arcade")
-                # elif event.type == pygame.KEYDOWN:
-                #     if event.key == pygame.K_ESCAPE:
-                #         pygame.quit()
-                #         return
+                            show_legend_and_tutorial(screen, "arcade")
 
-
+            # --- Game Over ---
             if self.game_over:
-                font = pygame.font.SysFont("Arial", 40)
-                text_surface = font.render(f"Game Over! Final Score: {self.score}", True, (255, 0, 0))
-                text_rect = text_surface.get_rect(center=(self.map.screen.get_width() // 2, self.map.screen.get_height() // 2))
-                self.map.screen.blit(text_surface, text_rect)
+                font_big = pygame.font.SysFont("Arial", 40)
+                text_surface = font_big.render(f"Game Over! Final Score: {self.score}", True, (255, 0, 0))
+                text_rect = text_surface.get_rect(center=(screen.get_width() // 2, screen.get_height() // 2))
+                screen.blit(text_surface, text_rect)
                 pygame.display.flip()
                 pygame.time.wait(3000)
-                name = get_player_name(self.map.screen)
+
+                name = get_player_name(screen)
                 if name:
                     save_highscore(name, self.score, "Arcade")
+
                 from mainMenu import main_menu
                 main_menu()
                 return
@@ -257,47 +229,12 @@ class ArcadeGame:
             pygame.display.flip()
             clock.tick(30)
 
-
-def draw_stats(screen, game):
-    font = pygame.font.SysFont("Arial", 24)
-    screen.fill((230, 230, 230), (0, 0, screen.get_width(), STATS_HEIGHT))
-    screen.blit(font.render(f"Turn: {game.turn}", True, (0, 0, 0)), (10, 10))
-    screen.blit(font.render(f"Coins: {game.coins}", True, (0, 0, 0)), (150, 10))
-    screen.blit(font.render(f"Score: {game.score}", True, (0, 0, 0)), (300, 10))
-
-    # Legend displayed left-to-right
-    legend_items_row1 = [("R", "Residential"), ("I", "Industry"), ("C", "Commercial")]
-    legend_items_row2 = [("O", "Park"), ("*", "Road")]
-
-    font_small = pygame.font.SysFont("Arial", 20)
-    x_start = screen.get_width() - 400
-    y_start = 10
-    spacing = 130
-
-    for i, (symbol, label) in enumerate(legend_items_row1):
-        text = font_small.render(f"{symbol}: {label}", True, (0, 0, 0))
-        screen.blit(text, (x_start + i * spacing, y_start))
-
-    for i, (symbol, label) in enumerate(legend_items_row2):
-        text = font_small.render(f"{symbol}: {label}", True, (0, 0, 0))
-        screen.blit(text, (x_start + i * spacing, y_start + 25))
-
 def main():
-    game = ArcadeGame()
+    pygame.init()
+    screen = pygame.display.set_mode((1280, 1000), pygame.NOFRAME)
+    game = ArcadeGame(screen)
     game.run()
-def draw_legend(screen, font):
-    # Smaller legend box
-    legend_rect = pygame.Rect(10, 520, 300, 50)
-    pygame.draw.rect(screen, (240, 240, 240), legend_rect)
-    pygame.draw.rect(screen, (0, 0, 0), legend_rect, 2)  # border
-
-    # Display one line of legend text
-    legend_text = "Press H to see more details"
-    text_surf = font.render(legend_text, True, (0, 0, 0))
-    screen.blit(text_surf, (legend_rect.x + 10, legend_rect.y + 15))
-
-    
 
 if __name__ == "__main__":
-    while True:
-        main()  # loop back to main menu every time the game ends
+    main()
+

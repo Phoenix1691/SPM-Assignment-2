@@ -16,9 +16,8 @@ BUILDING_COLORS = {
 
 MINIMAP_WIDTH_BUFFER = 220  # Width reserved on the right for minimap + label
 MINIMAP_MARGIN = 10
-STATS_HEIGHT = 90  # Same as UI_HEIGHT
-UI_HEIGHT = STATS_HEIGHT
-
+from ui_utils import UI_BAR_HEIGHT, MESSAGE_BAR_HEIGHT, MODE_BAR_HEIGHT
+TOP_MARGIN = UI_BAR_HEIGHT + MESSAGE_BAR_HEIGHT + MODE_BAR_HEIGHT
 
 class Map:
     def __init__(self, game_mode, grid_size, screen=None):
@@ -30,15 +29,12 @@ class Map:
         self.first_turn = True
         self.tile_size = 0  # To be set during screen init
         self.fixed_grid_pixel_size = 800
-        self.top_margin = STATS_HEIGHT  # so grid starts below stats bar
+        self.top_margin = TOP_MARGIN
         self.left_margin = 0
         self.dirty_tiles = set()
         self.minimap_surface = None
         self.minimap_dirty = True
-        self.stats_bar_height = STATS_HEIGHT
         # self.screen = screen
-
-
 
     def initialize_screen(self):
         pygame.display.init()
@@ -51,7 +47,7 @@ class Map:
 
         # Adjust tile size to fit screen minus stats bar
         max_tile_size = 64
-        usable_h = screen_h - self.stats_bar_height
+        usable_h = screen_h - TOP_MARGIN
         # self.tile_size = max(16, min(max_tile_size, screen_w // self.grid_size, usable_h // self.grid_size))
         usable_w = screen_w - MINIMAP_WIDTH_BUFFER
         self.tile_size = max(16, min(max_tile_size, usable_w // self.grid_size, usable_h // self.grid_size))
@@ -71,20 +67,12 @@ class Map:
         print(f"Fullscreen: {screen_w}x{screen_h}")
         print(f"Tile size: {self.tile_size}")
 
-
-    # def update_margins(self):
-    #     screen_w, screen_h = self.screen.get_size()
-    #     available_h = screen_h - UI_HEIGHT
-    #     self.left_margin = (screen_w - self.grid_size * self.tile_size) // 2
-    #     self.top_margin = self.stats_bar_height + (available_h - self.grid_size * self.tile_size) // 2
-
     def update_margins(self):
         screen_w, screen_h = self.screen.get_size()
-        available_w = screen_w - MINIMAP_WIDTH_BUFFER  # Reserve space for minimap
-        available_h = screen_h - UI_HEIGHT
-
+        available_w = screen_w - MINIMAP_WIDTH_BUFFER
         self.left_margin = (available_w - self.grid_size * self.tile_size) // 2
-        self.top_margin = self.stats_bar_height + 30  # 30px space for messages
+        self.top_margin = TOP_MARGIN
+
 
     def attempt_place_building(self, pos, building_type):
         x, y = pos
@@ -155,7 +143,7 @@ class Map:
         screen_w, _ = self.screen.get_size()
         bar_top = 0
 
-        bar_rect = pygame.Rect(0, bar_top, screen_w, self.stats_bar_height)
+        bar_rect = pygame.Rect(0, bar_top, screen_w, TOP_MARGIN)
         pygame.draw.rect(self.screen, GRAY, bar_rect)
         font = pygame.font.SysFont("Arial", 20)
         text = f"Grid: {self.grid_size}x{self.grid_size} | Tile: {self.tile_size}px | Buildings: {len(self.grid)}"
@@ -166,7 +154,10 @@ class Map:
 
     def draw(self):
         self.screen.fill((240, 240, 240))  # Light grey background outside grid
-
+        # Black line at top of grid
+        pygame.draw.line(self.screen, (0, 0, 0),
+                        (self.left_margin, self.top_margin),
+                        (self.left_margin + self.grid_size * self.tile_size, self.top_margin), 2)
         font = pygame.font.SysFont("Arial", self.tile_size // 2)
 
         if not self.dirty_tiles:
