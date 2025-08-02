@@ -1,6 +1,7 @@
 # freeplay.py - Free play mode for the city-building game
 import pygame
 import pickle
+import importlib
 from mapv2 import Map
 from tutorial import show_legend_and_tutorial
 from buildings.residential import residential
@@ -11,13 +12,10 @@ from buildings.road import road
 from highscore import save_highscore
 from ui_utils import get_player_name
 from ui_utils import draw_full_top_ui
+from scoring import get_connected_neighbors
 
 SCREEN_WIDTH = 800
 SCREEN_HEIGHT = 650
-STATS_HEIGHT = 50
-UI_BAR_HEIGHT = 50          # top bar for buttons and legend
-MESSAGE_BAR_HEIGHT = 30     # gray message bar
-
 WHITE = (255, 255, 255)
 GRAY = (200, 200, 200)
 BLACK = (0, 0, 0)
@@ -40,6 +38,19 @@ BUILDING_COLORS = {
 LEGEND_ITEMS_ROW1 = [("R", "Residential"), ("I", "Industry"), ("C", "Commercial")]
 LEGEND_ITEMS_ROW2 = [("O", "Park"), ("*", "Road")]
 
+def get_building_class(type_identifier):
+    mapping = {
+        "R": "residential",
+        "I": "industry",
+        "C": "commercial",
+        "O": "park",
+        "*": "road"
+    }
+    module_name = mapping.get(type_identifier)
+    if module_name:
+        module = importlib.import_module(f"buildings.{module_name}")
+        return getattr(module, module_name)
+    return None
 class FreePlayGame:
     def __init__(self, screen):
         self.map = Map("freeplay", grid_size=5, screen=screen)
@@ -58,51 +69,23 @@ class FreePlayGame:
         profit = 0
         upkeep = 0
         for (row, col), building in self.map.grid.items():
-            if hasattr(building, "calculate_profit_and_upkeep"):
-                p, u = building.calculate_profit_and_upkeep(self.map.grid, row, col)
-                profit += p
-                upkeep += u
+            p, u = building.calculate_profit_and_upkeep(self.map.grid, row, col)
+            profit += p
+            upkeep += u
         return profit, upkeep
 
-    def calculate_score(self):
-        score = 0
-        industries = 0
-
-        # Convert grid to easier form
-        grid = self.map.grid
-
-        # Handle non-road buildings
-        for (row, col), building in grid.items():
-            t = getattr(building, "type_identifier", None)
-            if t == "I":
-                industries += 1
-            elif t != "*":  # non-road
-                # Build adjacency counts
-                adjacent_counts = {}
-                for dr, dc in [(-1,0),(1,0),(0,-1),(0,1)]:
-                    neighbor = grid.get((row+dr, col+dc))
-                    if neighbor:
-                        key = getattr(neighbor, "type_identifier", None)
-                        if key:
-                            adjacent_counts[key] = adjacent_counts.get(key, 0) + 1
-                score += building.score(adjacent_counts)
-
-        # Industry global scoring: 1 point per industry
-        score += industries
-
-        # Road scoring: 1 point per continuous horizontal segment
-        max_col = max((c for _, c in grid.keys()), default=-1)
-        max_row = max((r for r, _ in grid.keys()), default=-1)
-        for r in range(max_row+1):
-            segment_len = 0
-            for c in range(max_col+1):
-                b = grid.get((r,c))
-                if b and getattr(b, "type_identifier", "") == "*":
-                    segment_len += 1
-                    score += 1  # 1 per road in continuous segment
-                else:
-                    segment_len = 0
-        return score
+    def calculate_total_score(self):
+        total_score = 0
+        for (row, col), building in self.map.grid.items():
+            # Get building type identifier
+            b_type = getattr(building, "type_identifier", building)
+            building_class = get_building_class(b_type)
+            if not building_class:
+                continue
+            building_instance = building_class()
+            connected_counts = get_connected_neighbors(self.map.grid, (row, col))
+            total_score += building_instance.score(connected_counts)
+        return total_score
 
     def show_message(self, msg, duration=120):
         self.message = msg
@@ -132,7 +115,7 @@ class FreePlayGame:
         if self.map.is_on_border(row, col):
             self.map.expand_grid()
 
-        self.score = self.calculate_score()
+        self.score = self.calculate_total_score()
         self.map.first_turn = False
         return True, "Building placed."
 
@@ -142,7 +125,7 @@ class FreePlayGame:
         col = (x - self.map.left_margin) // self.map.tile_size
         if (row, col) in self.map.grid:
             del self.map.grid[(row, col)]
-            self.score = self.calculate_score()
+            self.score = self.calculate_total_score()
             return True, "Building demolished."
         return False, "No building to demolish."
     def run(self):
@@ -191,10 +174,11 @@ class FreePlayGame:
                             # Place or demolish
                             if self.demolish_mode:
                                 success, msg = self.demolish_building(pos)
+
                             else:
                                 success, msg = self.place_building(pos)
                                 if success:
-                                    self.turn += 1
+                                    self.turn += 1 
                             self.show_message(msg)
 
                 elif event.type == pygame.KEYDOWN:
@@ -241,7 +225,8 @@ class FreePlayGame:
 
 def main():
     pygame.init()
-    screen = pygame.display.set_mode((1280, 800), pygame.NOFRAME) 
+    # screen = pygame.display.set_mode((1280, 800), pygame.NOFRAME) 
+    screen = pygame.display.set_mode((0, 0), pygame.FULLSCREEN)
     game = FreePlayGame(screen)
     game.run()
 

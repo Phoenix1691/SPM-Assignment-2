@@ -15,8 +15,10 @@ from highscore import save_highscore
 from tutorial import show_legend_and_tutorial
 from scoring import ScoringSystem
 from economy import GameEconomy
-from ui_utils import get_player_name, UI_BG_COLOR
+from ui_utils import get_player_name
 from ui_utils import draw_full_top_ui
+from scoring import get_connected_neighbors
+
 LEGEND_ITEMS = {
     "R": "Residential",
     "I": "Industry",
@@ -27,9 +29,6 @@ LEGEND_ITEMS = {
 
 GRID_SIZE = 20
 # UI layout constants
-UI_BAR_HEIGHT = 50          # top bar for buttons and legend
-MESSAGE_BAR_HEIGHT = 30     # gray message bar
-
 BUILDINGS = ['R', 'I', 'C', 'O', '*']
 
 def get_building_class(type_identifier):
@@ -66,17 +65,19 @@ class ArcadeGame:
     def place_building(self, pos, building):
         if self.coins < 1:
             return False, "No coins left."
-        success = self.map.attempt_place_building(pos, building)
-        if success:
+        building_class = get_building_class(building)
+        building_instance = building_class()
+        success = self.map.attempt_place_building(pos, building_instance)
 
+        if success:
             self.coins -= 1
             self.turn += 1
-            # Get coins generated from connected buildings
-            generated = self.economy.generate_arcade_coins()
-            self.coins += generated
-            gained_score = self.calculate_score(pos, building)
-            print(f"Score gained this turn: {gained_score}")
-            self.score += gained_score
+            self.coins += self.economy.generate_arcade_coins()
+
+            # Update total score after placement
+            self.score = self.calculate_total_score()
+            print(f"[DEBUG] Total Score: {self.score}")
+
             self.building_choices = self.random_building_choices()
             self.map.first_turn = False
 
@@ -98,8 +99,10 @@ class ArcadeGame:
                 return False, "Not enough coins to demolish."
             del self.map.grid[(row, col)]
             self.coins -= 1
-            self.score += self.calculate_score(pos, building)
-            # If no more buildings are on the map, reset first_turn flag
+            # Update total score after demolition
+            self.score = self.calculate_total_score()
+            print(f"[DEBUG] Total Score: {self.score}")
+
             if len(self.map.grid) == 0:
                 self.map.first_turn = True
             return True, "Building demolished."
@@ -114,10 +117,18 @@ class ArcadeGame:
                 adj.append(self.map.grid.get((r, c), "."))
         return adj
 
-    def calculate_score(self, pos, building_abbr):
-        # Returns total score from ScoringSystem
-        return self.score_system.scoring_main(pos, building_abbr)
-
+    def calculate_total_score(self):
+        total_score = 0
+        for (row, col), building in self.map.grid.items():
+            # Get building type identifier
+            b_type = getattr(building, "type_identifier", building)
+            building_class = get_building_class(b_type)
+            if not building_class:
+                continue
+            building_instance = building_class()
+            connected_counts = get_connected_neighbors(self.map.grid, (row, col))
+            total_score += building_instance.score(connected_counts)
+        return total_score
     def get_adjacent_counts(self, row, col):
         counts = {}
         for dx, dy in [(-1,0),(1,0),(0,-1),(0,1)]:
@@ -231,7 +242,8 @@ class ArcadeGame:
 
 def main():
     pygame.init()
-    screen = pygame.display.set_mode((1280, 1000), pygame.NOFRAME)
+    # screen = pygame.display.set_mode((1280, 1000), pygame.NOFRAME)
+    screen = pygame.display.set_mode((0, 0), pygame.FULLSCREEN)
     game = ArcadeGame(screen)
     game.run()
 

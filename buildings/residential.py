@@ -1,25 +1,29 @@
-# buildings/residential.py - Residential building class for the city-building game
+# buildings/residential.py - This file defines the Residential building type in the city-building game.
+# Residential (R): Scores 1 point per R or C, 2 points per O
 from buildings.building_parent import Building
 
 class residential(Building):
     type_identifier = "R"
 
-    def score(self, adjacent_counts):
-        # Adjacent to industry → always 1 point
-        if adjacent_counts.get("I", 0) > 0:
+    def score(self, connected_counts):
+        # Score for residential:
+        # - If any industry connected → 1 point total
+        # - Else: 1 per R or C, 2 per O
+        if connected_counts.get("I", 0) > 0:
             return 1
-        # 1 point per adjacent R or C, 2 points per adjacent O
         return (
-            adjacent_counts.get("R", 0)
-            + adjacent_counts.get("C", 0)
-            + adjacent_counts.get("O", 0) * 2
+            connected_counts.get("R", 0)
+            + connected_counts.get("C", 0)
+            + connected_counts.get("O", 0) * 2
         )
 
     def calculate_profit_and_upkeep(self, grid, row, col, mode=None):
-        # Generates 1 coin per turn
+        # Base profit/upkeep:
+        # - 1 coin profit
+        # - 1 coin upkeep per contiguous R cluster (handled per building)
         profit = 1
-        # Determine cluster size for upkeep cost
-        # Cluster = contiguous Rs (4-directional)
+
+        # Compute R cluster for upkeep cost
         visited = set()
         stack = [(row, col)]
         while stack:
@@ -31,5 +35,6 @@ class residential(Building):
                 neighbor = grid.get((r+dr, c+dc))
                 if neighbor and getattr(neighbor, "type_identifier", "") == "R":
                     stack.append((r+dr, c+dc))
+
         upkeep = 1  # 1 coin per cluster
         return profit, upkeep

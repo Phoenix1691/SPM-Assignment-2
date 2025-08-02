@@ -1,20 +1,16 @@
-# commercial.py - This file defines the Commercial building class for the city-building game.
-
+# buildings/commercial.py - This file defines the Commercial building type in the city-building game.
 from buildings.building_parent import Building
 
 class commercial(Building):
     type_identifier = "C"
 
-    def score(self, adjacent_counts):
-        # 1 point per adjacent commercial
-        return adjacent_counts.get("C", 0)
+    def score(self, connected_counts):
+        # Commercial: 1 point per adjacent commercial
+        return connected_counts.get("C", 0)
 
     def calculate_profit_and_upkeep(self, grid, row, col, mode=None):
-        profit = 3  # per turn
-        upkeep = 2
-        # Extra profit: 1 coin per adjacent residential
-        for dr, dc in [(-1,0),(1,0),(0,-1),(0,1)]:
-            neighbor = grid.get((row+dr, col+dc))
-            if neighbor and getattr(neighbor, "type_identifier", "") == "R":
-                profit += 1
-        return profit, upkeep
+        # Base profit/upkeep for Commercial:
+        # - Generates 3 coins per turn
+        # - Costs 2 coins upkeep
+        # - Extra profit per connected Residential handled centrally
+        return 3, 2

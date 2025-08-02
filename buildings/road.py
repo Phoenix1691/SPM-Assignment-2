@@ -6,14 +6,14 @@ from buildings.building_parent import Building
 class road(Building):
     type_identifier = "*"
 
-    def score(self, adjacent_counts):
-        # 1 point per connected road in same row
-        # This should be handled in calculate_score, but for simplicity:
-        return adjacent_counts.get("*", 0)
+    def score(self, connected_counts):
+        # Roads scored by rows in main game logic, 
+        # not here. Return 0.
+        return 0
 
     def calculate_profit_and_upkeep(self, grid, row, col, mode=None):
-        # Roads have no profit
-        # 1 coin upkeep if isolated (no adjacent road)
+        # Roads generate no profit.
+        # Unconnected single roads cost 1 coin to upkeep.
         has_neighbor = False
         for dr, dc in [(-1,0),(1,0),(0,-1),(0,1)]:
             neighbor = grid.get((row+dr, col+dc))
@@ -21,6 +21,7 @@ class road(Building):
                 has_neighbor = True
                 break
         return 0, 0 if has_neighbor else 1
+
 
 
 

@@ -135,3 +135,45 @@ class ScoringSystem:
                     stack.append((nx, ny))
 
         return cluster
+
+def get_connected_neighbors(grid, start_pos):
+    # Returns a dict of building type counts connected to start_pos via roads.
+    # start_pos is (row, col) in the grid.
+    from collections import deque
+
+    start_r, start_c = start_pos
+    visited = set()
+    q = deque([start_pos])
+    counts = {}
+
+    def get_abbr(cell):
+        b = grid.get(cell)
+        # Support for both string and object grid
+        return getattr(b, "type_identifier", b) if b else None
+
+    start_abbr = get_abbr(start_pos)
+    visited.add(start_pos)
+
+    while q:
+        r, c = q.popleft()
+        for dr, dc in [(-1,0),(1,0),(0,-1),(0,1)]:
+            nr, nc = r + dr, c + dc
+            neighbor = (nr, nc)
+            if neighbor in visited:
+                continue
+
+            abbr = get_abbr(neighbor)
+            if not abbr:
+                continue
+
+            # If neighbor is road, BFS continues
+            if abbr == "*":
+                q.append(neighbor)
+                visited.add(neighbor)
+                continue
+
+            # Otherwise, it's a building
+            counts[abbr] = counts.get(abbr, 0) + 1
+            visited.add(neighbor)
+
+    return counts
