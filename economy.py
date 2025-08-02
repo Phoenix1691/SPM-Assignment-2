@@ -1,3 +1,4 @@
+# economy.py - This file manages the game's economy, including scoring and building placement.
 from scoring import ScoringSystem
 
 class GameEconomy:

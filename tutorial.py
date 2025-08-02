@@ -1,3 +1,4 @@
+# tutorial.py - This file displays the game tutorial and legend for the city-building game.
 import pygame
 
 def show_legend_and_tutorial(screen, mode):

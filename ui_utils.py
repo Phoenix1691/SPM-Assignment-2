@@ -1,3 +1,4 @@
+# ui_utils.py - This file contains utility functions for the user interface in the city-building game.
 import pygame
 
 def draw_button(screen, rect, label, font, color=(200, 200, 200), border_color=(0, 0, 0)):

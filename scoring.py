@@ -1,3 +1,4 @@
+# scoring.py - This file contains the scoring system for the city-building game.
 class ScoringSystem:
     def __init__(self, map_reference):
         self.map = map_reference

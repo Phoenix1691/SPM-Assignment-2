@@ -1,3 +1,4 @@
+# highscore.py - This file manages the high scores for the city-building game.
 import csv
 import os
 
