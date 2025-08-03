@@ -5,6 +5,63 @@ import sys
 import pickle
 from arcade_mode import main as arcade_main
 from freeplay import main as freeplay_main
+import os
+
+def list_saved_files(save_dir="saves"):
+    if not os.path.exists(save_dir):
+        os.makedirs(save_dir)
+    files = [f for f in os.listdir(save_dir) if f.endswith(".pkl")]
+    return files
+
+def show_save_file_selector(screen):
+    pygame.font.init()
+    clock = pygame.time.Clock()
+    font = pygame.font.SysFont(None, 30)
+
+    files = list_saved_files()
+    selected_file = None
+
+    file_rects = []
+    screen.fill((0, 0, 0))
+    y = 100
+    for f in files:
+        rect = pygame.Rect(200, y, 400, 40)
+        file_rects.append((rect, f))
+        y += 50
+
+    back_rect = pygame.Rect(20, screen.get_height() - 60, 150, 40)
+
+    while True:
+        screen.fill((0, 0, 0))
+
+        title = font.render("Select a Saved Game to Load", True, (255, 255, 255))
+        screen.blit(title, (screen.get_width() // 2 - title.get_width() // 2, 30))
+
+        for rect, filename in file_rects:
+            pygame.draw.rect(screen, (100, 100, 255), rect)
+            text_surface = font.render(filename, True, (255, 255, 255))
+            screen.blit(text_surface, (rect.x + 10, rect.y + 5))
+
+        pygame.draw.rect(screen, (150, 50, 50), back_rect)
+        back_text = font.render("Back", True, (255, 255, 255))
+        screen.blit(back_text, (back_rect.x + 30, back_rect.y + 5))
+
+        pygame.display.flip()
+
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                sys.exit()
+            elif event.type == pygame.MOUSEBUTTONDOWN:
+                if back_rect.collidepoint(event.pos):
+                    return None  # Go back to main menu
+
+                for rect, filename in file_rects:
+                    if rect.collidepoint(event.pos):
+                        return os.path.join("saves", filename)
+
+        clock.tick(30)
+
 
 # Colors
 WHITE = (255, 255, 255)
@@ -134,11 +191,14 @@ def main_menu():
                             freeplay_main()  # Runs self-contained
 
                         elif text == "Load Saved Game":
-                            game = load_saved_game(screen)
-                            if game:
-                                game.run()  # Each game has its own loop
-                            else:
-                                print("No saved game to load.")
+                            filename = show_save_file_selector(screen)
+                            if filename:
+                                game = load_saved_game(screen, filename)
+                                if game:
+                                    game.run()
+                                else:
+                                    print("Failed to load the selected save.")
+
 
                         elif text == "Display High Scores":
                             print("Display high scores clicked")
