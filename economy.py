@@ -31,19 +31,22 @@ class GameEconomy:
         return True, "Building placed."
 
     def generate_arcade_coins(self):
-        coins = 0
+        coin_earnings = 0
         visited = set()
 
-        for (y, x), abbr in self.map.grid.items():
-            pos = (x, y)
-            print(f"Checking tile at {pos}: {abbr}")
-            if abbr in ["I", "C"] and pos not in visited:
-                connected = self.score_system.get_connected_buildings(pos)
-                count = sum(1 for _, b in connected if b == "R")
-                coins += count
-                visited.add(pos)
+        for (row, col), building in self.map.grid.items():
+            # Normalize building type
+            abbr = getattr(building, "type_identifier", building)
+            if abbr == "R" or (row, col) in visited:
+                continue
 
-        return coins
+            connected = self.score_system.get_connected_buildings((col, row))  # note (x, y) = (col, row)
+            count = sum(1 for _, b in connected if getattr(b, "type_identifier", b) == "R")
+            coin_earnings += count
+            visited.update(pos for pos, _ in connected)
+
+        return coin_earnings
+
 
     def calculate_freeplay_income(self):
         profit = 0

@@ -72,7 +72,10 @@ class ArcadeGame:
         if success:
             self.coins -= 1
             self.turn += 1
-            self.coins += self.economy.generate_arcade_coins()
+            earned = self.economy.generate_arcade_coins()
+            self.coins += earned  # gain from connected Rs
+            print(f"[DEBUG] Coins after generation: {self.coins}")
+
 
             # Update total score after placement
             self.score = self.calculate_total_score()
