@@ -137,14 +137,47 @@ class ArcadeGame:
             if b:
                 counts[b] = counts.get(b, 0) + 1
         return counts
+        
+     def get_filename_gui(self):
+        import pygame
+        input_text = ''
+        input_active = True
+        clock = pygame.time.Clock()
+        input_box = pygame.Rect(300, 300, 400, 50)
+        color_inactive = pygame.Color('gray')
+        color_active = pygame.Color('white')
+        color = color_active
+        font = pygame.font.SysFont(None, 36)  # or use self.font if you have one
 
+        while input_active:
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    pygame.quit()
+                    exit()
+
+                elif event.type == pygame.KEYDOWN:
+                    if event.key == pygame.K_RETURN:
+                        return input_text.strip() + '.pkl'
+                    elif event.key == pygame.K_BACKSPACE:
+                        input_text = input_text[:-1]
+                    else:
+                        input_text += event.unicode
+
+            self.map.screen.fill((30, 30, 30))  # or self.screen.fill(...) if you store screen there
+            txt_surface = font.render("Enter save filename: " + input_text, True, color)
+            width = max(400, txt_surface.get_width() + 10)
+            input_box.w = width
+            self.map.screen.blit(txt_surface, (input_box.x + 5, input_box.y + 10))
+            pygame.draw.rect(self.map.screen, color, input_box, 2)
+
+            pygame.display.flip()
+            clock.tick(30)
    
-    def save_game(self):
-        filename = input("Enter a name for your save file (without extension): ")
+    def save_game(self, filename="savegame.pkl"):
+        import os
         if not filename.endswith(".pkl"):
             filename += ".pkl"
 
-        # Optional: Save in a 'saves' folder
         folder = "saves"
         if not os.path.exists(folder):
             os.makedirs(folder)
