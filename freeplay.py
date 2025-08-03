@@ -267,6 +267,15 @@ class FreePlayGame:
 
             pygame.display.flip()
             clock.tick(30)
+    def load_data(self, data):
+        self.map.grid = data.get('grid', {})
+        self.turn = data.get('turn', 0)
+        self.loss_turns = data.get('loss_turns', 0)
+        self.score = data.get('score', 0)
+        self.map.grid_size = data.get('grid_size', self.map.grid_size)
+        self.map.tile_size = data.get('tile_size', self.map.tile_size)
+        self.map.left_margin = data.get('left_margin', self.map.left_margin)
+        self.map.top_margin = data.get('top_margin', self.map.top_margin)
 
 def main():
     pygame.init()
