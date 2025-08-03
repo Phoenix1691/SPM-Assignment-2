@@ -230,7 +230,7 @@ class FreePlayGame:
             'left_margin': self.map.left_margin,
             'top_margin': self.map.top_margin,
         }
-         with open(full_path, 'wb') as f:
+        with open(full_path, 'wb') as f:
             pickle.dump(data, f)
 
         print(f"Game saved as {full_path}")
