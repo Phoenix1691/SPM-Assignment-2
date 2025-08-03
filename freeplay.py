@@ -230,6 +230,10 @@ class FreePlayGame:
             'left_margin': self.map.left_margin,
             'top_margin': self.map.top_margin,
         }
+         with open(full_path, 'wb') as f:
+            pickle.dump(data, f)
+
+        print(f"Game saved as {full_path}")
     def get_filename_gui(self):
         import pygame
         input_text = ''
