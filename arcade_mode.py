@@ -138,43 +138,9 @@ class ArcadeGame:
                 counts[b] = counts.get(b, 0) + 1
         return counts
 
-    def get_filename_gui(self):
-        input_text = ''
-        input_active = True
-        clock = pygame.time.Clock()
-        input_box = pygame.Rect(300, 300, 400, 50)
-        color_inactive = pygame.Color('gray')
-        color_active = pygame.Color('white')
-        color = color_active
-        font = pygame.font.SysFont(None, 36)  # or use self.font if you have one
-
-        while input_active:
-            for event in pygame.event.get():
-                if event.type == pygame.QUIT:
-                    pygame.quit()
-                    exit()
-
-                elif event.type == pygame.KEYDOWN:
-                    if event.key == pygame.K_RETURN:
-                        return input_text.strip() + '.pkl'
-                    elif event.key == pygame.K_BACKSPACE:
-                        input_text = input_text[:-1]
-                    else:
-                        input_text += event.unicode
-
-            self.map.screen.fill((30, 30, 30))  # or self.screen.fill(...) if you store screen there
-            txt_surface = font.render("Enter save filename: " + input_text, True, color)
-            width = max(400, txt_surface.get_width() + 10)
-            input_box.w = width
-            self.map.screen.blit(txt_surface, (input_box.x + 5, input_box.y + 10))
-            pygame.draw.rect(self.map.screen, color, input_box, 2)
-
-            pygame.display.flip()
-            clock.tick(30)
-
-    def save_game(self, filename="savegame.pkl"):
+     def save_game(self, filename="savegame.pkl"):
         import os
-        if not filename.endswith(".pkl"):
+        if not filename.lower().endswith(".pkl"):
             filename += ".pkl"
 
         folder = "saves"
@@ -198,6 +164,40 @@ class ArcadeGame:
             pickle.dump(data, f)
 
         print(f"Game saved as {full_path}")
+
+    def get_filename_gui(self):
+        import pygame
+        input_text = ''
+        input_active = True
+        clock = pygame.time.Clock()
+        input_box = pygame.Rect(300, 300, 400, 50)
+        color_inactive = pygame.Color('gray')
+        color_active = pygame.Color('white')
+        color = color_active
+        font = pygame.font.SysFont(None, 36)
+
+        while input_active:
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    pygame.quit()
+                    exit()
+                elif event.type == pygame.KEYDOWN:
+                    if event.key == pygame.K_RETURN:
+                        return input_text.strip()
+                    elif event.key == pygame.K_BACKSPACE:
+                        input_text = input_text[:-1]
+                    else:
+                        input_text += event.unicode
+
+            self.map.screen.fill((30, 30, 30))
+            txt_surface = font.render("Enter save filename: " + input_text, True, color)
+            width = max(400, txt_surface.get_width() + 10)
+            input_box.w = width
+            self.map.screen.blit(txt_surface, (input_box.x + 5, input_box.y + 10))
+            pygame.draw.rect(self.map.screen, color, input_box, 2)
+
+            pygame.display.flip()
+            clock.tick(30)
     
     def load_data(self, data):
         self.map.grid = data['grid']
@@ -249,8 +249,9 @@ class ArcadeGame:
                         placing_building = None
                         message = "Demolish mode."
                     elif buttons["Save"].collidepoint(pos):
-                        self.save_game()
-                        message = "Game saved."
+                        filename = self.get_filename_gui()  # open GUI prompt to get filename
+                        self.save_game(filename)            # save game with that filename
+                        message = f"Game saved as {filename}"
                     else:
                         msg = ""
                         if demolishing:
