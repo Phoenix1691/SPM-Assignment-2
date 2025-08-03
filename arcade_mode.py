@@ -137,8 +137,7 @@ class ArcadeGame:
             if b:
                 counts[b] = counts.get(b, 0) + 1
         return counts
-
-     def save_game(self, filename="savegame.pkl"):
+    def save_game(self, filename="savegame.pkl"):
         import os
         if not filename.lower().endswith(".pkl"):
             filename += ".pkl"
