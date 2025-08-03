@@ -138,7 +138,19 @@ class ArcadeGame:
                 counts[b] = counts.get(b, 0) + 1
         return counts
 
-    def save_game(self, filename="savegame.pkl"):
+   
+    def save_game(self):
+        filename = input("Enter a name for your save file (without extension): ")
+        if not filename.endswith(".pkl"):
+            filename += ".pkl"
+
+        # Optional: Save in a 'saves' folder
+        folder = "saves"
+        if not os.path.exists(folder):
+            os.makedirs(folder)
+
+        full_path = os.path.join(folder, filename)
+
         data = {
             'mode': 'arcade',
             'grid': self.map.grid,
@@ -149,8 +161,11 @@ class ArcadeGame:
             'selected_building': self.selected_building,
             'game_over': self.game_over
         }
-        with open(filename, 'wb') as f:
+
+        with open(full_path, 'wb') as f:
             pickle.dump(data, f)
+
+        print(f"Game saved as {full_path}")
     
     def load_data(self, data):
         self.map.grid = data['grid']
