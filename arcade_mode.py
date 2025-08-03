@@ -137,9 +137,8 @@ class ArcadeGame:
             if b:
                 counts[b] = counts.get(b, 0) + 1
         return counts
-        
-     def get_filename_gui(self):
-        import pygame
+
+    def get_filename_gui(self):
         input_text = ''
         input_active = True
         clock = pygame.time.Clock()
@@ -172,7 +171,7 @@ class ArcadeGame:
 
             pygame.display.flip()
             clock.tick(30)
-   
+
     def save_game(self, filename="savegame.pkl"):
         import os
         if not filename.endswith(".pkl"):
